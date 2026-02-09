@@ -1,0 +1,87 @@
+<div class="page-content">
+
+    <app-confirm-dialog></app-confirm-dialog>
+
+    <div class="table-container animate-in">
+
+        <div class="toolbar">
+            <h5 class="mb-0 fw-bold text-dark">Departments</h5>
+
+            <div class="d-flex align-items-center gap-2">
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i> <input type="text" class="form-control"
+                        placeholder="Search..." [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)">
+                </div>
+
+                <a routerLink="/admin-departments/add" class="btn-add-user">
+                    <i class="fa-solid fa-plus"></i> <span>Add Department</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="10%" class="text-center">SR</th>
+                        <th width="70%">Name</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading()) {
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">Loading...</td>
+                    </tr>
+                    }
+
+                    @for (dept of paginatedDepartments(); track dept.id; let i = $index) {
+                    <tr>
+                        <td class="text-center text-muted">{{ (currentPage() - 1) * pageSize() + i + 1 }}</td>
+
+                        <td class="fw-bold text-dark">{{ dept.name }}</td>
+
+                        <td class="text-end">
+                            <button class="action-btn delete" (click)="onDeleteClick(dept.id, dept.name)">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    @if (!isLoading()) {
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">No departments found.</td>
+                    </tr>
+                    }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!isLoading() && filteredDepartments().length > 0) {
+        <div class="pagination-footer">
+            <div class="text-muted small">
+                Showing {{ (currentPage() - 1) * pageSize() + 1 }} -
+                {{ currentPage() * pageSize() > filteredDepartments().length ? filteredDepartments().length :
+                currentPage() * pageSize() }}
+                of {{ filteredDepartments().length }}
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === 1" (click)="prevPage()">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span class="btn btn-sm btn-light border disabled fw-bold">
+                    {{ currentPage() }}
+                </span>
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === totalPages()"
+                    (click)="nextPage()">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        }
+
+    </div>
+</div>

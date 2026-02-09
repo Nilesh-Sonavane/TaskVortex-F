@@ -1,0 +1,126 @@
+@if (isLoading) {
+<app-loader></app-loader>
+}
+
+<div class="page-content">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 animate-in">
+
+            <div class="form-card">
+
+                <form (ngSubmit)="onSubmit()" #userForm="ngForm">
+
+                    <h5 class="form-section-title"><i class="fa-solid fa-user-shield"></i> Access Level</h5>
+
+                    <div class="role-grid">
+                        <label>
+                            <input type="radio" name="role" class="role-radio" value="admin"
+                                [(ngModel)]="userData.role">
+                            <div class="role-card">
+                                <i class="fa-solid fa-circle-check check-circle"></i>
+                                <div class="role-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                                <div class="role-name">Admin</div>
+                                <div class="role-desc">Full system access & settings.</div>
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" name="role" class="role-radio" value="manager"
+                                [(ngModel)]="userData.role">
+                            <div class="role-card">
+                                <i class="fa-solid fa-circle-check check-circle"></i>
+                                <div class="role-icon"><i class="fa-solid fa-user-tie"></i></div>
+                                <div class="role-name">Manager</div>
+                                <div class="role-desc">Manage teams & projects.</div>
+                            </div>
+                        </label>
+
+                        <label>
+                            <input type="radio" name="role" class="role-radio" value="employee"
+                                [(ngModel)]="userData.role">
+                            <div class="role-card">
+                                <i class="fa-solid fa-circle-check check-circle"></i>
+                                <div class="role-icon"><i class="fa-solid fa-user"></i></div>
+                                <div class="role-name">Employee</div>
+                                <div class="role-desc">Standard access.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <hr class="border-secondary opacity-10 my-4">
+
+                    <h5 class="form-section-title"><i class="fa-regular fa-id-card"></i> Personal Details</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="firstName" [(ngModel)]="userData.firstName"
+                                required minlength="2" #fName="ngModel"
+                                [class.is-invalid]="fName.invalid && fName.touched">
+                            @if (fName.invalid && fName.touched) { <div class="text-danger small mt-1">First name is
+                                required.</div> }
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="lastName" [(ngModel)]="userData.lastName"
+                                required minlength="2" #lName="ngModel"
+                                [class.is-invalid]="lName.invalid && lName.touched">
+                            @if (lName.invalid && lName.touched) { <div class="text-danger small mt-1">Last name is
+                                required.</div> }
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" name="email" [(ngModel)]="userData.email" required
+                                pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-z]{2,4}$" #emailRef="ngModel"
+                                [class.is-invalid]="emailRef.invalid && emailRef.touched">
+                            @if (emailRef.invalid && emailRef.touched) { <div class="text-danger small mt-1">Valid email
+                                required.</div> }
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Department</label>
+                            <select class="form-select" name="department" [(ngModel)]="userData.department">
+
+                                <option [ngValue]="null" disabled selected>Select Department...</option>
+
+                                @for (dept of departments; track dept.id) {
+                                <option [ngValue]="dept">{{ dept.name }}</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" class="form-control" name="jobTitle" [(ngModel)]="userData.jobTitle">
+                        </div>
+                    </div>
+
+                    <h5 class="form-section-title"><i class="fa-solid fa-lock"></i> Security</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="password" [(ngModel)]="userData.password"
+                                    required>
+                                <button type="button" class="btn-gen-pass" (click)="generatePassword()">
+                                    <i class="fa-solid fa-shuffle me-2"></i> Generate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top border-secondary border-opacity-10">
+                        <a routerLink="/admin-users" class="btn-cancel">Cancel</a>
+                        <button type="submit" class="btn-submit" [disabled]="userForm.invalid || isLoading">
+                            Create User
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

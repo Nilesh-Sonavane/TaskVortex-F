@@ -1,0 +1,41 @@
+<div class="wrapper">
+    <app-sidebar></app-sidebar>
+
+    <div class="main-content">
+
+        <header class="top-navbar">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-light d-lg-none me-2"><i class="fa-solid fa-bars"></i></button>
+
+                @if (showBackButton) {
+                <button class="btn btn-sm btn-light me-3 rounded-circle" (click)="goBack()" title="Go Back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                }
+
+                <h5 class="fw-bold m-0 text-dark">{{ pageTitle }}</h5>
+            </div>
+
+            <div class="user-profile">
+                <div class="text-end me-2 d-none d-md-block">
+
+                    <div class="fw-bold small text-dark">
+                        {{ auth.currentUser?.firstName | titlecase}} {{ auth.currentUser?.lastName | titlecase }}
+                    </div>
+
+                    <div class="text-muted text-uppercase" style="font-size: 0.75rem;">
+                        {{ auth.currentUser?.jobTitle || auth.currentUser?.role }}
+                    </div>
+
+                </div>
+
+                <img [src]="'https://ui-avatars.com/api/?name=' + auth.currentUser?.firstName + '+' + auth.currentUser?.lastName + '&background=0f172a&color=fff'"
+                    class="avatar">
+            </div>
+        </header>
+
+        <div class="page-content">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>

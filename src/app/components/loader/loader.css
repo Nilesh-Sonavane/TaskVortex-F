@@ -1,0 +1,129 @@
+/* --- 1. The Overlay (Background) --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    /* --- TRANSPARENT BLUR EFFECT --- */
+    background: rgba(255, 255, 255, 0.2) !important;
+    /* 0.4 = 40% visible white */
+    backdrop-filter: blur(2px);
+    /* Higher blur = stronger "frosted glass" look */
+    -webkit-backdrop-filter: blur(2px) !important;
+    /* Safari support */
+
+    z-index: 99999;
+    /* Keeps it on top of everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ... rest of your CSS (spinner-container, rings, etc.) remains the same ... */
+
+/* --- 2. Layout Container --- */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+/* --- 3. The Multi-Ring Box --- */
+.multi-ring-loader {
+    position: relative;
+    width: 80px;
+    /* Fixed size ensures rings are visible */
+    height: 80px;
+}
+
+/* Common Ring Styles */
+.ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Keeps them perfectly centered */
+    border-radius: 50%;
+    border: 4px solid transparent;
+    /* Only colored sides will show */
+    animation: spin linear infinite;
+}
+
+/* Ring 1 (Outer) - Blue */
+.ring-1 {
+    width: 60px;
+    height: 60px;
+    border-top-color: #2563eb;
+    /* Primary Blue */
+    border-right-color: #2563eb;
+    animation-duration: 1.5s;
+}
+
+/* Ring 2 (Middle) - Dark Slate (Contrast) */
+.ring-2 {
+    width: 40px;
+    height: 40px;
+    border-top-color: #1e293b;
+    /* Dark Slate */
+    border-left-color: #1e293b;
+    animation-duration: 1.2s;
+    animation-direction: reverse;
+    /* Spins Opposite Way */
+}
+
+/* Ring 3 (Inner) - Blue */
+.ring-3 {
+    width: 20px;
+    height: 20px;
+    border-top-color: #2563eb;
+    border-right-color: #2563eb;
+    animation-duration: 0.8s;
+}
+
+/* --- 4. Text Styling --- */
+.loading-text {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+}
+
+/* --- Animations --- */
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}

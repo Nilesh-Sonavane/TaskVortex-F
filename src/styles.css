@@ -1,1 +1,40 @@
-/* You can add global styles to this file, and also import other style files */
+/* GLOBAL VARIABLES & FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #2563eb;
+    --bg-body: #f8fafc;
+    --sidebar-bg: #1e293b;
+    --sidebar-width: 260px;
+    /* CRITICAL for alignment */
+    --border-color: #e2e8f0;
+    --text-dark: #1e293b;
+    --text-grey: #64748b;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-dark);
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}

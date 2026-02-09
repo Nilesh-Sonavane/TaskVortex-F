@@ -1,0 +1,133 @@
+@if (isLoading) {
+<app-loader></app-loader>
+}
+
+<app-confirm-dialog></app-confirm-dialog>
+
+<div class="page-content">
+    <div class="table-container animate-in">
+
+        <div class="toolbar">
+            <div class="d-flex gap-2">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search projects..." [(ngModel)]="searchTerm"
+                        (input)="applyFilters()">
+                </div>
+
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="status" id="st1" autocomplete="off"
+                        [(ngModel)]="statusFilter" value="active" (change)="applyFilters()">
+                    <label class="btn btn-outline-secondary btn-sm d-flex align-items-center" for="st1">Active</label>
+
+                    <input type="radio" class="btn-check" name="status" id="st2" autocomplete="off"
+                        [(ngModel)]="statusFilter" value="archived" (change)="applyFilters()">
+                    <label class="btn btn-outline-secondary btn-sm d-flex align-items-center" for="st2">Archived</label>
+                </div>
+            </div>
+            <a routerLink="/admin-projects/create" class="btn-create">
+                <i class="fa-solid fa-plus"></i> Create Project
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="30%">Project Name</th>
+                        <th>Manager</th>
+                        <th>Members</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @for (project of filteredProjects; track project.id) {
+                    <tr [class.opacity-75]="project.status === 'ARCHIVED'">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="proj-icon" [ngClass]="project.iconColorClass">
+                                    <i class="fa-solid" [ngClass]="project.icon"></i>
+                                </div>
+                                <div>
+                                    <span class="proj-name">
+                                        <span class="text-muted small fw-normal me-1">[{{ project.projectKey }}]</span>
+                                        {{ project.name | titlecase}}
+                                    </span>
+                                    <span class="proj-meta">
+                                        Started {{ project.startDate }} • {{ project.departmentName || 'General' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="manager-cell">
+                                <img [src]="getAvatarUrl(project.managerName)" class="manager-avatar">
+                                <span class="small">
+                                    {{ project.managerName || 'Unknown' | titlecase}}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>{{ project.membersCount || 0 }} Users</td>
+
+                        <td>
+                            <span [class]="getStatusBadgeClass(project.status)">
+                                {{ project.status === 'ON_HOLD' ? 'On Hold' : project.status | titlecase }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress progress-slim">
+                                    <div class="progress-bar" [ngClass]="getProgressColor(project.progress)"
+                                        [style.width.%]="project.progress">
+                                    </div>
+                                </div>
+                                <span class="small text-muted">{{ project.progress }}%</span>
+                            </div>
+                        </td>
+
+                        <td class="text-end">
+                            @if (project.status !== 'ARCHIVED') {
+                            <a routerLink="/admin-projects/edit/{{project.id}}" class="btn-icon" title="Edit Settings">
+                                <i class="fa-solid fa-gear"></i>
+                            </a>
+                            <button class="btn-icon" title="Archive" (click)="archiveProject(project.id)">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </button>
+                            }
+
+                            @if (project.status === 'ARCHIVED') {
+                            <button class="btn-icon" title="Restore" (click)="restoreProject(project.id)">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                            <button class="btn-icon danger" title="Delete Permanent"
+                                (click)="deleteProject(project.id)">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                            }
+                        </td>
+                    </tr>
+                    }
+
+                    @empty {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div class="d-flex flex-column align-items-center">
+                                <i class="fa-solid fa-folder-open mb-3 fs-3 bg-light p-3 rounded-circle"></i>
+                                <h6 class="fw-bold text-dark">No projects found</h6>
+                                <p class="mb-0 small">Try adjusting your search or filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

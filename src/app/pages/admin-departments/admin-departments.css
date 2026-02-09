@@ -1,0 +1,178 @@
+/* --- PAGE LAYOUT --- */
+.page-content {
+    padding: 30px;
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+/* --- TABLE CARD --- */
+.table-container {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+/* --- TOOLBAR --- */
+.toolbar {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+.toolbar h5 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+/* --- SEARCH BOX --- */
+.search-box {
+    position: relative;
+    width: 280px;
+}
+
+.search-box input {
+    width: 100%;
+    height: 40px;
+    padding-left: 40px;
+    /* Space for icon */
+    padding-right: 15px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: #fff;
+}
+
+.search-box input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+    font-size: 0.9rem;
+}
+
+/* --- ADD BUTTON --- */
+.btn-add-user {
+    height: 40px;
+    padding: 0 20px;
+    background: #2563eb;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: 0.2s;
+    white-space: nowrap;
+    border: none;
+}
+
+.btn-add-user:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* --- TABLE STYLES (Fixed Width Issue) --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    /* <--- THIS WAS MISSING PREVIOUSLY */
+    border-collapse: collapse;
+}
+
+.custom-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 16px 24px;
+    /* Increased padding */
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    /* Ensure alignment */
+}
+
+.custom-table td {
+    padding: 16px 24px;
+    /* Increased padding */
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.custom-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-end {
+    text-align: right !important;
+}
+
+/* --- ACTION BUTTON --- */
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.action-btn.delete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* --- PAGINATION FOOTER --- */
+.pagination-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

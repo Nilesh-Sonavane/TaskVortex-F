@@ -1,0 +1,132 @@
+@if (isLoading) {
+<app-loader></app-loader>
+}
+
+<div class="page-content">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 animate-in">
+
+            <div class="form-card">
+                <form (ngSubmit)="onSubmit()" #projectForm="ngForm">
+
+                    <h5 class="form-section-title"><i class="fa-solid fa-folder-open"></i> Project Details</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label">Project Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" placeholder="e.g. Mobile App Redesign"
+                                [(ngModel)]="projectData.name" (input)="generateKey(projectData.name)" name="name"
+                                #pName="ngModel" required minlength="3"
+                                [class.is-invalid]="pName.invalid && pName.touched">
+
+                            @if (pName.invalid && pName.touched) {
+                            <div class="text-danger small mt-1">
+                                Project name is required (min 3 chars).
+                            </div>
+                            }
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Project Key <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">KEY</span>
+                                <input type="text" class="form-control text-uppercase" [(ngModel)]="projectData.key"
+                                    name="key" #pKey="ngModel" placeholder="MOBI" required maxlength="4"
+                                    pattern="[A-Z0-9]{2,4}" [class.is-invalid]="pKey.invalid && pKey.touched">
+                            </div>
+
+                            @if (pKey.invalid && pKey.touched) {
+                            <div class="text-danger small mt-1">
+                                Key required (2-4 chars).
+                            </div>
+                            } @else {
+                            <div class="form-text" style="font-size: 0.75rem;">Unique ID (e.g., MOBI-101)</div>
+                            }
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" rows="3" [(ngModel)]="projectData.description"
+                                name="description" placeholder="Brief overview of the project goals..."></textarea>
+                        </div>
+                    </div>
+
+                    <h5 class="form-section-title"><i class="fa-solid fa-calendar-days"></i> Leadership & Timeline</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Project Manager <span class="text-danger">*</span></label>
+                            <select class="form-select" [(ngModel)]="projectData.managerId" name="managerId"
+                                #pManager="ngModel" required [class.is-invalid]="pManager.invalid && pManager.touched">
+
+                                <option [ngValue]="null" disabled selected>Select Manager...</option>
+                                @for (user of managers; track user.id) {
+                                <option [value]="user.id">
+                                    {{ user.firstName | titlecase }} {{ user.lastName | titlecase }}
+                                </option>
+                                }
+                            </select>
+                            @if (pManager.invalid && pManager.touched) {
+                            <div class="text-danger small mt-1">Manager is required.</div>
+                            }
+                            <div class="form-text text-muted">This user will have full control over tasks.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" [(ngModel)]="projectData.startDate" name="startDate"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Target End Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" [(ngModel)]="projectData.endDate" name="endDate"
+                                required>
+                        </div>
+                    </div>
+
+                    <h5 class="form-section-title"><i class="fa-solid fa-users"></i> Initial Team Members</h5>
+
+                    <div class="mb-4">
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-white"><i class="fa-solid fa-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Filter employees..."
+                                [(ngModel)]="memberSearchTerm" [ngModelOptions]="{standalone: true}">
+                        </div>
+
+                        <div class="employee-list-box">
+                            @for (user of filteredEmployees; track user.id) {
+                            <label class="employee-item" [class.selected]="projectData.memberIds.has(user.id)">
+                                <input class="form-check-input" type="checkbox"
+                                    [checked]="projectData.memberIds.has(user.id)" (change)="toggleMember(user.id)">
+
+                                <img [src]="getAvatar(user)" class="emp-avatar-xs">
+
+                                <div>
+                                    <span class="d-block fw-bold small text-dark">
+                                        {{ user.firstName | titlecase }} {{ user.lastName | titlecase }}
+                                    </span>
+                                    <span class="d-block small text-muted" style="font-size: 0.7rem;">
+                                        {{ user.jobTitle | titlecase }}
+                                    </span>
+                                </div>
+                            </label>
+                            } @empty {
+                            <div class="p-3 text-center text-muted small">No employees found.</div>
+                            }
+                        </div>
+                        <div class="form-text">Managers can add more members later.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top border-secondary border-opacity-10">
+                        <a routerLink="/admin-projects" class="btn-cancel">Cancel</a>
+
+                        <button type="submit" class="btn-submit" [disabled]="projectForm.invalid || isLoading">
+                            Create Project
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

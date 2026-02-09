@@ -1,0 +1,113 @@
+/* Scoped Wrapper to handle the full-screen background */
+.login-wrapper {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    /* Ensure full viewport width */
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    position: fixed;
+    /* Fixes background in place */
+    top: 0;
+    left: 0;
+}
+
+.login-card {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 12px;
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+    /* Stays above background */
+    z-index: 10;
+}
+
+.brand-header {
+    background-color: #2563eb;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.logo-img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+    background-color: white;
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    padding: 10px;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* --- TOAST NOTIFICATION STYLES --- */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1055;
+    /* Higher than everything else */
+    pointer-events: none;
+    /* Allows clicking through the empty space */
+}
+
+.toast-msg {
+    background: #fff;
+    border-left: 5px solid #dc3545;
+    /* Red Border */
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    pointer-events: auto;
+    /* Re-enable clicks on the toast itself */
+
+    /* Animation: Slide in from right */
+    animation: slideInRight 0.5s ease forwards;
+}
+
+.toast-msg i {
+    font-size: 1.2rem;
+    color: #dc3545;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

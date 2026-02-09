@@ -1,0 +1,117 @@
+<div class="page-content">
+    <div class="table-container animate-in">
+
+        <div class="toolbar">
+            <div class="d-flex gap-2">
+
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search..." [ngModel]="searchTerm()"
+                        (ngModelChange)="onSearchChange($event)">
+                </div>
+
+                <select class="form-select" style="width: 140px;" [ngModel]="selectedRole()"
+                    (ngModelChange)="selectedRole.set($event); onFilterChange()">
+                    <option>All Roles</option>
+                    <option>Admin</option>
+                    <option>Manager</option>
+                    <option>Employee</option>
+                </select>
+
+                <select class="form-select" style="width: 160px;" [ngModel]="selectedDepartment()"
+                    (ngModelChange)="selectedDepartment.set($event); onFilterChange()">
+
+                    <option>All Departments</option>
+
+                    @for (dept of departments(); track dept.id) {
+                    <option [value]="dept.name">{{ dept.name }}</option>
+                    }
+
+                </select>
+
+            </div>
+
+            <a routerLink="/admin-users/add-user" class="btn-add-user">
+                <i class="fa-solid fa-plus"></i> Add User
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="35%">User</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Department</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading()) {
+                    <tr>
+                        <td colspan="5" class="text-center py-5">Loading users...</td>
+                    </tr>
+                    }
+
+                    @for (user of paginatedUsers(); track user.id) {
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <img [src]="getAvatar(user.firstName, user.role)" class="user-avatar-sm">
+                                <div class="user-meta">
+                                    <span class="user-name">{{ user.firstName | titlecase }} {{ user.lastName |
+                                        titlecase }}</span>
+                                    <span class="user-email">{{ user.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge" [ngClass]="'badge-' + user.role.toLowerCase()">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td><span class="status-dot status-active"></span> Active</td>
+
+                        <td>{{ user.department || 'N/A' }}</td>
+
+                        <td class="text-end">
+                            <button class="action-btn" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button class="action-btn delete" title="Delete"><i
+                                    class="fa-regular fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No users found.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!isLoading() && filteredAllUsers().length > 0) {
+        <div class="pagination-footer d-flex justify-content-between align-items-center mt-3 p-3 border-top">
+            <div class="text-muted small">
+                Showing {{ (currentPage() - 1) * pageSize() + 1 }} -
+                {{ currentPage() * pageSize() > filteredAllUsers().length ? filteredAllUsers().length : currentPage() *
+                pageSize() }}
+                of {{ filteredAllUsers().length }} users
+            </div>
+            <div class="pagination-controls d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === 1" (click)="prevPage()">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span class="btn btn-sm btn-light disabled border-0 fw-bold">
+                    Page {{ currentPage() }} of {{ totalPages() }}
+                </span>
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === totalPages()"
+                    (click)="nextPage()">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        }
+
+    </div>
+</div>

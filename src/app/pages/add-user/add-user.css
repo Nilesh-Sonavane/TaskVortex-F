@@ -1,0 +1,264 @@
+/* --- Variables reused from your template --- */
+:host {
+    --primary: #2563eb;
+    --border-color: #e2e8f0;
+}
+
+/* --- Layout Animations --- */
+.animate-in {
+    animation: fadeIn 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-content {
+    padding: 30px;
+}
+
+/* --- Form Card --- */
+.form-card {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section-title i {
+    color: var(--primary);
+}
+
+/* --- Inputs --- */
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    height: 42px;
+    border-radius: 8px;
+    border-color: #e2e8f0;
+    padding: 0 15px;
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* --- Role Grid (The Cards) --- */
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.role-radio {
+    display: none;
+}
+
+.role-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+}
+
+.role-card:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* Selected State */
+.role-radio:checked+.role-card {
+    background: #eff6ff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+}
+
+.role-radio:checked+.role-card .role-icon {
+    color: var(--primary);
+}
+
+.check-circle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--primary);
+    font-size: 1rem;
+    display: none;
+}
+
+.role-radio:checked+.role-card .check-circle {
+    display: block;
+}
+
+.role-icon {
+    font-size: 1.5rem;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    transition: 0.2s;
+}
+
+.role-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #1e293b;
+    margin-bottom: 2px;
+}
+
+.role-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.3;
+}
+
+/* --- Buttons --- */
+.btn-gen-pass {
+    height: 42px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 500;
+    padding: 0 15px;
+    border-radius: 8px;
+    /* Adjust for input group alignment */
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn-gen-pass:hover {
+    background: #f8fafc;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.btn-cancel {
+    text-decoration: none;
+    color: #64748b;
+    font-weight: 500;
+    padding: 10px 20px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.btn-submit {
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-weight: 500;
+    padding: 10px 25px;
+    border-radius: 8px;
+}
+
+.btn-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 992px) {
+    .role-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* --- TOAST NOTIFICATIONS --- */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    /* Let clicks pass through empty space */
+}
+
+.toast-msg {
+    background: white;
+    min-width: 300px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    pointer-events: auto;
+    /* Re-enable clicks on the toast */
+    animation: slideInRight 0.4s ease forwards;
+}
+
+/* Success Variant (Green) */
+.toast-msg.success {
+    border-left: 5px solid #22c55e;
+    color: #1e293b;
+}
+
+.toast-msg.success i {
+    color: #22c55e;
+    font-size: 1.2rem;
+}
+
+/* Error Variant (Red) */
+.toast-msg.error {
+    border-left: 5px solid #ef4444;
+    color: #1e293b;
+}
+
+.toast-msg.error i {
+    color: #ef4444;
+    font-size: 1.2rem;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

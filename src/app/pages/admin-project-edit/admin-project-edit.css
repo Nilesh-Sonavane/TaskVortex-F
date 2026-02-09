@@ -1,0 +1,221 @@
+ /* --- MAIN CONTENT --- */
+ .main-content {
+     margin-left: var(--sidebar-width);
+     width: calc(100% - var(--sidebar-width));
+     min-height: 100vh;
+     display: flex;
+     flex-direction: column;
+ }
+
+ .top-navbar {
+     height: 70px;
+     background: white;
+     border-bottom: 1px solid var(--border-color);
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 0 30px;
+     position: sticky;
+     top: 0;
+     z-index: 900;
+ }
+
+ .user-profile {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     cursor: pointer;
+     padding: 5px 10px;
+     border-radius: 8px;
+     transition: 0.2s;
+ }
+
+ .user-profile:hover {
+     background: #f8fafc;
+ }
+
+ .avatar {
+     width: 36px;
+     height: 36px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 2px solid #e2e8f0;
+ }
+
+ .page-content {
+     padding: 30px;
+ }
+
+ /* --- FORM STYLES --- */
+ .form-card {
+     background: white;
+     border-radius: 12px;
+     padding: 30px;
+     border: 1px solid var(--border-color);
+     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+ }
+
+ .form-section-title {
+     font-size: 1.1rem;
+     font-weight: 700;
+     color: #1e293b;
+     margin-bottom: 20px;
+     padding-bottom: 10px;
+     border-bottom: 1px solid #f1f5f9;
+ }
+
+ .form-label {
+     font-size: 0.85rem;
+     font-weight: 600;
+     color: #334155;
+     margin-bottom: 6px;
+ }
+
+ .form-control,
+ .form-select {
+     height: 42px;
+     border-radius: 8px;
+     border-color: #e2e8f0;
+     padding: 0 15px;
+     font-size: 0.95rem;
+     color: #1e293b;
+ }
+
+ .form-control:focus,
+ .form-select:focus {
+     border-color: var(--primary);
+     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+ }
+
+ textarea.form-control {
+     height: auto;
+     padding: 12px 15px;
+     resize: vertical;
+ }
+
+ .form-control:disabled {
+     background-color: #f1f5f9;
+     cursor: not-allowed;
+ }
+
+ /* Project Key Box */
+ .input-group-text {
+     background: #f8fafc;
+     border-color: #e2e8f0;
+     color: #64748b;
+     font-weight: 600;
+     font-size: 0.85rem;
+ }
+
+ /* Current Members List */
+ .member-row {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 10px;
+     border: 1px solid #e2e8f0;
+     border-radius: 8px;
+     margin-bottom: 8px;
+ }
+
+ .member-info {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+ }
+
+ .member-img {
+     width: 32px;
+     height: 32px;
+     border-radius: 50%;
+ }
+
+ .btn-remove-member {
+     border: none;
+     background: none;
+     color: #ef4444;
+     width: 32px;
+     height: 32px;
+     border-radius: 6px;
+     transition: 0.2s;
+ }
+
+ .btn-remove-member:hover {
+     background: #fef2f2;
+ }
+
+ .btn-cancel {
+     text-decoration: none;
+     color: #64748b;
+     font-weight: 500;
+     padding: 10px 20px;
+     background: white;
+     border: 1px solid #e2e8f0;
+     border-radius: 8px;
+ }
+
+ .btn-submit {
+     background: var(--primary);
+     color: white;
+     border: none;
+     font-weight: 500;
+     padding: 10px 25px;
+     border-radius: 8px;
+ }
+
+ .btn-submit:hover {
+     background: #1d4ed8;
+ }
+
+ /* Danger Zone */
+ .danger-zone {
+     border: 1px solid #fee2e2;
+     background: #fef2f2;
+     border-radius: 12px;
+     padding: 20px;
+     margin-top: 30px;
+ }
+
+ .danger-title {
+     color: #991b1b;
+     font-weight: 700;
+     margin-bottom: 5px;
+     font-size: 1rem;
+ }
+
+ .danger-desc {
+     font-size: 0.85rem;
+     color: #7f1d1d;
+     margin-bottom: 15px;
+ }
+
+ .btn-danger-outline {
+     background: white;
+     border: 1px solid #ef4444;
+     color: #ef4444;
+     font-weight: 500;
+     padding: 8px 16px;
+     border-radius: 6px;
+     font-size: 0.9rem;
+     transition: 0.2s;
+ }
+
+ .btn-danger-outline:hover {
+     background: #ef4444;
+     color: white;
+ }
+
+ @media (max-width: 992px) {
+     .sidebar {
+         transform: translateX(-100%);
+     }
+
+     .sidebar.active {
+         transform: translateX(0);
+     }
+
+     .main-content {
+         margin-left: 0;
+         width: 100%;
+     }
+ }
