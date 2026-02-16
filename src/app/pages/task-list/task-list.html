@@ -1,0 +1,168 @@
+<div class="page-content">
+    <div class="table-card animate-in">
+        <div class="toolbar">
+            <div class="d-flex gap-2">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search tasks..." [ngModel]="searchQuery()"
+                        (ngModelChange)="searchQuery.set($event); onFilterChange()">
+                </div>
+
+                <select class="form-select" [ngModel]="selectedStatus()"
+                    (ngModelChange)="selectedStatus.set($event); onFilterChange()">
+                    <option value="All">Status: All</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="REVIEW">Review</option>
+                    <option value="DONE">Done</option>
+                </select>
+
+                <select class="form-select" [ngModel]="selectedPriority()"
+                    (ngModelChange)="selectedPriority.set($event); onFilterChange()">
+                    <option value="All">Priority: All</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                </select>
+            </div>
+            <a routerLink="/tasks/new" class="btn btn-primary fw-medium">
+                <i class="fa-solid fa-plus me-2"></i> New Task
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="35%">Task Name</th>
+                        <th>Assignee</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (task of paginatedTasks(); track task.id) {
+                    <tr>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-dark">{{ task.title | titlecase }}</span>
+                                <span class="small text-muted">ID: #TV-{{ task.id }} • {{ task.project | titlecase
+                                    }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (task.assigneeName) {
+                            <div class="assignee-badge">
+                                <img [src]="getAvatarUrl(task.assigneeName)" class="assignee-avatar"
+                                    [alt]="task.assigneeName">
+                                <span class="small fw-medium">{{ task.assigneeName | titlecase }}</span>
+                            </div>
+                            } @else {
+                            <span
+                                class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 rounded-pill small">Unassigned</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge-status" [ngClass]="getStatusClass(task.status)">
+                                {{ task.status.replace('_', ' ') | titlecase }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="priority-dot" [ngClass]="getPriorityClass(task.priority)"></span>
+                            {{ task.priority | titlecase }}
+                        </td>
+                        <td>{{ task.dueDate | date:'MMM d, y' }}</td>
+                        <td class="text-end">
+                            <button class="action-btn" title="View Details" (click)="openTaskDetails(task)">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                            <a [routerLink]="['/tasks/edit', task.id]" style="text-decoration: none;" class="action-btn"
+                                title="Edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    }
+                    @empty {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No tasks found.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 border-top border-light d-flex justify-content-between align-items-center">
+            <span class="small text-muted">
+                Showing {{ filteredAllTasks().length }} Tasks
+                (Page {{ currentPage() }} of {{ totalPages() }})
+            </span>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === 1"
+                    (click)="currentPage.set(currentPage() - 1)">Prev</button>
+                <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === totalPages()"
+                    (click)="currentPage.set(currentPage() + 1)">Next</button>
+            </div>
+        </div>
+    </div>
+    @if (selectedTaskDetail()) {
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-bottom-0 p-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge-status" [ngClass]="getStatusClass(selectedTaskDetail().status)">
+                            {{ selectedTaskDetail().status.replace('_', ' ') | titlecase }}
+                        </span>
+                        <h5 class="modal-title fw-bold mb-0">#TV-{{ selectedTaskDetail().id }}: {{
+                            selectedTaskDetail().title | titlecase }}</h5>
+                    </div>
+                    <button type="button" class="btn-close" (click)="closeTaskDetails()"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold text-muted text-uppercase small mb-3">Task Description</h6>
+                            <p class="text-secondary">{{ selectedTaskDetail().description || 'No description provided.'
+                                | titlecase }}</p>
+                        </div>
+
+                        <div class="col-md-4 border-start ps-4">
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Project</h6>
+                                <p class="fw-medium">{{ selectedTaskDetail().project | titlecase }}</p>
+                            </div>
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Assignee</h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img [src]="getAvatarUrl(selectedTaskDetail().assigneeName)" class="assignee-avatar"
+                                        style="width: 24px; height: 24px;">
+                                    <span class="fw-medium">{{ selectedTaskDetail().assigneeName || 'Unassigned'
+                                        | titlecase }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Due Date</h6>
+                                <p class="fw-medium text-dark"><i
+                                        class="fa-regular fa-calendar-check me-2 text-primary"></i>
+                                    {{ selectedTaskDetail().dueDate | date:'MMM d, y' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top-0 p-3">
+
+                    <button type="button" class="btn btn-secondary px-4" (click)="closeTaskDetails()">Close</button>
+                    <a [routerLink]="['/tasks/edit', selectedTaskDetail().id]" class="btn btn-primary px-4">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Task
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>

@@ -52,7 +52,6 @@ export class AuthService {
       email: authResult.email,
       role: role
     };
-    console.log(user);
 
     // --- 2. UPDATE SIGNALS ---
     this.token.set(token);

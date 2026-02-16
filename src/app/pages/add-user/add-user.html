@@ -103,8 +103,8 @@
                         <div class="col-12">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="password" [(ngModel)]="userData.password"
-                                    required>
+                                <input type="password" class="form-control" name="password"
+                                    [(ngModel)]="userData.password" required>
                                 <button type="button" class="btn-gen-pass" (click)="generatePassword()">
                                     <i class="fa-solid fa-shuffle me-2"></i> Generate
                                 </button>

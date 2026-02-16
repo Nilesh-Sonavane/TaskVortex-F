@@ -69,7 +69,7 @@ export class AddProjectComponent implements OnInit {
 
     this.employees = this.users.filter(u => {
       const role = (u.role || '').toUpperCase();
-      return role === 'EMPLOYEE' || role === 'USER' || role === '';
+      return role === 'EMPLOYEE' || role === 'ADMIN' || role == 'MANAGER' || role === '';
     });
   }
 

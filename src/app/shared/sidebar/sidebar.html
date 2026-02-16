@@ -1,4 +1,4 @@
-@if (isLoading) {
+<!-- @if (isLoading) {
 <app-loader></app-loader>
 }
 <div class="sidebar-overlay" [class.show]="isSidebarOpen" (click)="closeSidebar()"></div>
@@ -42,7 +42,7 @@
                     (click)="closeSidebar()">
                     <i class="fa-solid fa-list small-icon"></i> All Users
                 </a>
-                <a routerLink="/admin-users/add-user" routerLinkActive="active-link" class="nav-link submenu-link"
+                <a routerLink="/add-user" routerLinkActive="active-link" class="nav-link submenu-link"
                     (click)="closeSidebar()">
                     <i class="fa-solid fa-user-plus small-icon"></i> Add User
                 </a>
@@ -73,6 +73,121 @@
         </div>
 
 
+        }
+    </div>
+
+    <div class="p-3 border-top border-secondary">
+        <button (click)="logout()" class="nav-link text-danger w-100 text-start bg-transparent border-0">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+        </button>
+    </div>
+</nav> -->
+
+
+@if (isLoading) {
+<app-loader></app-loader>
+}
+<div class="sidebar-overlay" [class.show]="isSidebarOpen" (click)="closeSidebar()"></div>
+
+<button class="mobile-toggle btn btn-primary d-lg-none" (click)="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<nav class="sidebar" [class.mobile-open]="isSidebarOpen">
+
+    <div class="sidebar-header">
+        <div class="d-flex align-items-center gap-2">
+            <img src="assets/logo.png" alt="TaskVortex" class="logo-img">
+            <h5 class="mb-0 fw-bold">TaskVortex</h5>
+        </div>
+        <button class="btn text-white d-lg-none ms-auto" (click)="closeSidebar()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="sidebar-menu">
+
+        <p class="menu-label">Personal</p>
+
+        <a routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+            class="nav-link" (click)="closeSidebar()">
+            <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+
+        <a routerLink="/my-tasks" routerLinkActive="active-link" class="nav-link" (click)="closeSidebar()">
+            <i class="fa-solid fa-list-check"></i> My Tasks
+        </a>
+
+
+        @if (auth.isManager()) {
+        <p class="menu-label mt-3">Team Operations</p>
+
+        <div class="nav-group">
+            <a class="nav-link d-flex justify-content-between align-items-center" (click)="toggleTaskMenu()"
+                [class.active-parent]="isActive('/tasks')">
+                <span><i class="fa-solid fa-network-wired"></i> Task Management</span>
+                <i class="fa-solid fa-chevron-down transition-icon" [class.rotate]="isTaskMenuOpen"></i>
+            </a>
+
+            <div class="submenu" [class.show]="isTaskMenuOpen">
+                <a routerLink="/tasks" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    class="nav-link submenu-link" (click)="closeSidebar()">
+                    <i class="fa-solid fa-list small-icon"></i> All Team Tasks
+                </a>
+
+                <a routerLink="/tasks/new" routerLinkActive="active-link" class="nav-link submenu-link"
+                    (click)="closeSidebar()">
+                    <i class="fa-solid fa-plus small-icon"></i> Create Task
+                </a>
+            </div>
+        </div>
+        }
+
+
+        @if (auth.isAdmin()) {
+        <p class="menu-label mt-3">System Administration</p>
+
+        <div class="nav-group">
+            <a class="nav-link d-flex justify-content-between align-items-center" (click)="toggleUserMenu()"
+                [class.active-parent]="isActive('/admin-users')">
+                <span><i class="fa-solid fa-users-gear"></i> User Management</span>
+                <i class="fa-solid fa-chevron-down transition-icon" [class.rotate]="isUserMenuOpen"></i>
+            </a>
+
+            <div class="submenu" [class.show]="isUserMenuOpen">
+                <a routerLink="/admin-users" routerLinkActive="active-link" class="nav-link submenu-link"
+                    (click)="closeSidebar()">
+                    <i class="fa-solid fa-list small-icon"></i> All Users
+                </a>
+                <a routerLink="/add-user" routerLinkActive="active-link" class="nav-link submenu-link"
+                    (click)="closeSidebar()">
+                    <i class="fa-solid fa-user-plus small-icon"></i> Add User
+                </a>
+                <a routerLink="/admin-departments" routerLinkActive="active-link" class="nav-link submenu-link">
+                    <i class="fa-solid fa-building"></i> Departments
+                </a>
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <a class="nav-link d-flex justify-content-between align-items-center" (click)="toggleProjectMenu()"
+                [class.active-parent]="isActive('/admin-projects')">
+                <span><i class="fa-solid fa-folder-tree"></i> Projects</span>
+                <i class="fa-solid fa-chevron-down transition-icon" [class.rotate]="isProjectMenuOpen"></i>
+            </a>
+
+            <div class="submenu" [class.show]="isProjectMenuOpen">
+                <a routerLink="/admin-projects" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
+                    class="nav-link submenu-link" (click)="closeSidebar()">
+                    <i class="fa-solid fa-list small-icon"></i> All Projects
+                </a>
+
+                <a routerLink="/admin-projects/create" routerLinkActive="active-link" class="nav-link submenu-link"
+                    (click)="closeSidebar()">
+                    <i class="fa-solid fa-plus small-icon"></i> Create Project
+                </a>
+            </div>
+        </div>
         }
     </div>
 

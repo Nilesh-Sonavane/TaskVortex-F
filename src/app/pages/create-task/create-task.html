@@ -1,0 +1,247 @@
+@if (isLoading) {
+<app-loader></app-loader>
+}
+<app-confirm-dialog #confirmDialog></app-confirm-dialog>
+
+<div class="page-content">
+    <div class="form-card animate-in">
+        <div class="mb-4">
+            <h2 class="h4 fw-bold text-dark">{{ isEditMode ? 'Edit Task' : 'Create New Task' }}</h2>
+            <p class="text-muted small">
+                {{ isEditMode ? 'Modify the details of task #TV-' + taskId : 'Fill in the details to assign a new task
+                to your team' }}
+            </p>
+        </div>
+
+        <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+            <div class="row g-4">
+
+                <div class="col-lg-8">
+                    <div class="mb-4">
+                        <label class="form-label">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" formControlName="title"
+                            placeholder="e.g. Update Landing Page Hero Section"
+                            [class.is-invalid]="taskForm.get('title')?.invalid && taskForm.get('title')?.touched"
+                            style="text-transform: capitalize;">
+
+                        @if (taskForm.get('title')?.invalid && taskForm.get('title')?.touched) {
+                        <div class="text-danger small mt-1">Task title is required (min 3 chars).</div>
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Description</label>
+                        <div class="editor-container">
+                            <div class="editor-toolbar">
+                                <button type="button" class="toolbar-btn"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="toolbar-btn"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="toolbar-btn"><i class="fa-solid fa-underline"></i></button>
+                                <div style="width: 1px; background: #e2e8f0; margin: 0 5px;"></div>
+                                <button type="button" class="toolbar-btn"><i class="fa-solid fa-list-ul"></i></button>
+                                <button type="button" class="toolbar-btn"><i class="fa-solid fa-link"></i></button>
+                            </div>
+                            <textarea class="editor-textarea" formControlName="description"
+                                placeholder="Detailed description of the task..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Attachments</label>
+
+                        @if (isEditMode && existingAttachments.length > 0) {
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold mb-2 d-block">Current Files (Saved):</label>
+                            @for (fileName of existingAttachments; track fileName) {
+                            <div
+                                class="d-flex justify-content-between align-items-center bg-light border p-2 mb-2 rounded shadow-sm">
+                                <span class="small text-dark text-truncate" style="cursor: pointer; max-width: 70%;"
+                                    (click)="viewFile(fileName)" title="Click to view">
+                                    <i class="fa-solid fa-paperclip me-2 text-primary"></i>
+
+                                    {{ fileName.includes('_') ? fileName.substring(fileName.indexOf('_') + 1) : fileName
+                                    }}
+                                </span>
+
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm text-primary border-0 bg-transparent"
+                                        (click)="viewFile(fileName)" title="View File">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm text-danger border-0 bg-transparent"
+                                        (click)="deleteExistingAttachment(fileName)" title="Delete File">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                        }
+                        <input type="file" #fileInput (change)="onFileSelected($event)" multiple hidden>
+                        <div class="upload-zone" (click)="fileInput.click()" style="cursor: pointer;">
+                            <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                            <p class="upload-text"><span>{{ isEditMode ? 'Add more files' : 'Click to upload' }}</span>
+                                or drag and drop</p>
+                            <p class="small text-muted mb-0">SVG, PNG, JPG or PDF (max. 10MB)</p>
+                        </div>
+
+                        @if (selectedFiles.length > 0) {
+                        <div class="mt-2">
+                            <label class="small text-primary fw-bold mb-2 d-block">New Files to Upload:</label>
+                            @for (file of selectedFiles; track $index) {
+                            <div
+                                class="d-flex justify-content-between align-items-center bg-white border p-2 mb-2 rounded shadow-sm">
+                                <span class="small text-dark text-truncate" style="max-width: 80%;">
+                                    <i class="fa-solid fa-file me-2 text-primary"></i>{{ file.name }}
+                                </span>
+                                <button type="button" class="btn btn-sm text-danger border-0 bg-transparent"
+                                    (click)="removeFile($index)">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Subtasks</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" #newSubtask
+                                (keyup.enter)="addSubtask(newSubtask); $event.preventDefault()"
+                                placeholder="Add a subtask (e.g. Research competitor UI)...">
+                            <button class="btn btn-outline-primary" type="button" (click)="addSubtask(newSubtask)">
+                                <i class="fa-solid fa-plus"></i> Add
+                            </button>
+                        </div>
+
+                        <div class="d-flex flex-column bg-light p-3 rounded-3" style="min-height: 50px;">
+                            @if (subtasks.length === 0) {
+                            <small class="text-muted text-center fst-italic">No subtasks added yet.</small>
+                            }
+
+                            @for (subtask of subtasks.controls; track $index) {
+                            <div
+                                class="d-flex justify-content-between align-items-center bg-white border p-2 mb-2 rounded shadow-sm">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="checkbox" [checked]="subtask.value.isCompleted"
+                                        (change)="subtask.value.isCompleted = !subtask.value.isCompleted">
+
+                                    <span [class.text-decoration-line-through]="subtask.value.isCompleted">
+                                        {{ subtask.value.title }}
+                                    </span>
+                                </div>
+                                <button type="button" class="btn btn-sm text-danger border-0 bg-transparent"
+                                    (click)="removeSubtask($index)">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="p-3 bg-light rounded-3 border border-light-subtle">
+                        <div class="mb-3">
+                            <label class="form-label">Project <span class="text-danger">*</span></label>
+                            <select class="form-select" formControlName="projectId">
+                                <option [ngValue]="null" disabled selected>Select a project...</option>
+                                @for (project of managedProjects; track project.id) {
+                                <option [value]="project.id">{{ project.name | titlecase }}</option>
+                                }
+                            </select>
+                            @if (managedProjects.length === 0) {
+                            <div class="mt-2 animate-in">
+                                <small class="text-danger fw-medium">
+                                    <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                    No projects assigned to you. You must be part of a project to create tasks.
+                                </small>
+                            </div>
+                            }
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Due Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" formControlName="dueDate">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Priority</label>
+                            <div class="priority-group">
+                                <input type="radio" formControlName="priority" value="HIGH" id="prio-high"
+                                    class="priority-radio">
+                                <label for="prio-high" class="priority-label">High</label>
+
+                                <input type="radio" formControlName="priority" value="MEDIUM" id="prio-med"
+                                    class="priority-radio">
+                                <label for="prio-med" class="priority-label">Medium</label>
+
+                                <input type="radio" formControlName="priority" value="LOW" id="prio-low"
+                                    class="priority-radio">
+                                <label for="prio-low" class="priority-label">Low</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 position-relative">
+                            <label class="form-label">Assign To <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" placeholder="Search member..."
+                                    style="text-transform: capitalize;" [(ngModel)]="assigneeSearchTerm"
+                                    [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
+                                    (blur)="toggleDropdown(false)">
+                            </div>
+
+                            @if (isDropdownOpen && searchedEmployees.length > 0) {
+                            <div class="custom-dropdown-results shadow-lg border animate-in">
+                                @for (emp of searchedEmployees; track emp.id) {
+                                <div class="dropdown-item-row" (click)="selectMember(emp)">
+                                    <img [src]="getAvatar(emp)" class="rounded-circle border" width="35" height="35">
+                                    <div class="ms-3 overflow-hidden">
+                                        <div class="fw-bold small text-dark lh-1">
+                                            {{ emp.name || (emp.firstName + ' ' + emp.lastName) | titlecase }}
+                                        </div>
+                                        <div class="text-muted text-truncate mt-1" style="font-size: 0.75rem;">
+                                            {{ emp.email }}
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            }
+
+                            @if (selectedAssignee && !isDropdownOpen) {
+                            <div class="assignee-preview-card d-flex align-items-center p-3 mt-3 animate-in">
+                                <img [src]="getAvatar(selectedAssignee)" class="rounded-circle me-3 border shadow-sm"
+                                    width="50" height="50">
+                                <div class="d-flex flex-column overflow-hidden">
+                                    <h6 class="mb-0 fw-bold text-dark">
+                                        {{ selectedAssignee.name || (selectedAssignee.firstName + ' ' +
+                                        selectedAssignee.lastName) | titlecase }}
+                                    </h6>
+                                    <span class="text-muted small text-truncate">{{ selectedAssignee.email }}</span>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-secondary opacity-10 my-4">
+
+            <div class="d-flex justify-content-end gap-3">
+                <button type="button" class="btn-cancel border-0 bg-transparent text-muted"
+                    routerLink="/tasks">Cancel</button>
+
+                <button type="submit" class="btn-submit btn btn-primary px-4"
+                    [disabled]="taskForm.invalid || isLoading">
+                    <i class="fa-solid me-2" [ngClass]="isEditMode ? 'fa-save' : 'fa-plus'"></i>
+                    {{ isEditMode ? 'Update Task' : 'Create Task' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
