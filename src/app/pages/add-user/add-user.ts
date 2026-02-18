@@ -31,14 +31,14 @@ export class AddUserComponent implements OnInit {
     department: null as Department | null,
     jobTitle: '',
     role: 'employee',
-    password: ''
+    password: 'Task@123'
   };
 
   isLoading = false;
 
-  constructor() {
-    this.generatePassword();
-  }
+  // constructor() {
+  //   this.generatePassword();
+  // }
 
   ngOnInit() {
     this.loadDepartments();

@@ -1,0 +1,292 @@
+<div class="page-content animate-in">
+    @if (isLoading()) {
+    <div class="d-flex justify-content-center align-items-center py-5" style="min-height: 400px;">
+        <div class="spinner-grow text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    } @else if (task()) {
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a routerLink="/tasks"
+                            class="text-decoration-none text-primary">Tasks</a></li>
+                    @if (task().parentTaskId) {
+                    <li class="breadcrumb-item">
+                        <a [routerLink]="['/tasks', task().parentTaskId]" class="text-decoration-none">Parent Task</a>
+                    </li>
+                    }
+                    <li class="breadcrumb-item active">#TV-{{ task().id }}</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark mb-0">{{ task().title | titlecase }}</h2>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-light border btn-sm px-3 shadow-sm bg-white" routerLink="/tasks">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back to List
+            </button>
+            <a [routerLink]="['/tasks/edit', task().id]" class="btn btn-primary btn-sm px-3 shadow-sm">
+                <i class="fa-solid fa-pen-to-square me-2"></i>Edit Task
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <h6 class="text-uppercase fw-bold text-muted small mb-3">
+                    <i class="fa-solid fa-align-left me-2 text-primary"></i>Task Description
+                </h6>
+                <div class="text-secondary lh-lg" style="white-space: pre-wrap;">
+                    {{ task().description || 'No detailed description provided.' }}
+                </div>
+            </div>
+
+            @if (!task().parentTaskId) {
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-0">
+                        <i class="fa-solid fa-list-check me-2 text-primary"></i>Subtasks Checklist
+                    </h6>
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
+                        {{ getCompletedSubtasksCount(task()) }} of {{ task().subtasks?.length || 0 }} Completed
+                    </span>
+                </div>
+
+                <div class="subtask-list">
+                    @for (sub of task().subtasks; track sub.id) {
+                    <div class="d-flex align-items-center gap-3 p-3 mb-2 rounded bg-light border border-light-subtle transition-all hover-shadow"
+                        [class.border-success-subtle]="sub.status === 'DONE'" [routerLink]="['/tasks', sub.id]"
+                        style="cursor: pointer;">
+                        <div class="status-icon">
+                            <i class="fa-solid"
+                                [ngClass]="sub.status === 'DONE' ? 'fa-circle-check text-success' : 'fa-regular fa-circle text-muted opacity-50'"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <span [class.text-decoration-line-through]="sub.status === 'DONE'"
+                                [class.text-muted]="sub.status === 'DONE'" class="fw-medium text-dark">
+                                {{ sub.title |titlecase}}
+                            </span>
+                        </div>
+                        <span class="badge rounded-pill small" [ngClass]="getStatusClass(sub.status)">
+                            {{ sub.status.replace('_', ' ') | titlecase }}
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-muted opacity-50 small"></i>
+                    </div>
+                    } @empty {
+                    <div class="text-center py-4 text-muted fst-italic border rounded-3 border-dashed">
+                        No subtasks assigned yet.
+                    </div>
+                    }
+                </div>
+            </div>
+            } @else {
+            <div class="alert alert-info border-0 shadow-sm p-4 d-flex align-items-center gap-3 mb-4">
+                <i class="fa-solid fa-circle-info fs-4"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Subtask Information</h6>
+                    <p class="mb-0 small text-secondary">
+                        This task is a subtask of <strong>{{ task().parentTaskTitle || 'a parent task' }}</strong>.
+                    </p>
+                </div>
+            </div>
+            }
+
+            <div class="audit-trail-wrapper mt-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 px-2">
+                    <h6 class="text-uppercase fw-bold text-dark small mb-0">
+                        <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Task Activity
+                    </h6>
+                    <span class="badge bg-white text-muted border fw-normal px-3 py-2">
+                        {{ historyList().length }} Total Events
+                    </span>
+                </div>
+
+                <div class="audit-scroll-container" style="max-height: 600px; overflow-y: auto;">
+                    <div class="timeline-line">
+                        @for (log of historyList(); track log.id) {
+                        <div class="audit-card-wrapper d-flex gap-3 mb-4">
+                            <div class="performer-avatar-container flex-shrink-0">
+                                <img [src]="getAvatarUrl(log.performedBy ? (log.performedBy.firstName | titlecase) : 'System')"
+                                    class="rounded-circle border shadow-sm bg-white" width="36" height="36">
+                            </div>
+
+                            <div class="audit-card border rounded-3 bg-white shadow-sm flex-grow-1">
+                                <div class="p-3">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark small">
+                                                {{ log.performedBy ? (log.performedBy.firstName + ' ' +
+                                                log.performedBy.lastName |titlecase) : 'System' | titlecase}}
+                                            </div>
+                                            <div class="text-muted extra-small">
+                                                {{ log.timestamp | date:'MMM d, y • h:mm a' }}
+                                            </div>
+                                        </div>
+                                        <span class="badge rounded-pill"
+                                            [ngClass]="log.action.includes('CREATE') ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'">
+                                            {{ log.action.replace('_', ' ') }}
+                                        </span>
+                                    </div>
+                                    <div class="audit-details-panel mt-2 pt-2 border-top">
+                                        <div class="log-details-html small text-break"
+                                            [innerHTML]="getSafeHtml(log.details)">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 20px;">
+                <div class="card border-0 shadow-sm p-4 mb-4">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-4">Properties</h6>
+                    <div class="mb-4">
+                        <label class="small text-muted d-block mb-1">Current Status</label>
+                        <span class="badge-status w-100 text-center py-2 fs-6 shadow-sm d-block"
+                            [ngClass]="getStatusClass(task().status)">
+                            {{ task().status.replace('_', ' ') | titlecase }}
+                        </span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="small text-muted d-block mb-1">Priority</label>
+                        <div class="d-flex align-items-center gap-2 p-2 border rounded bg-white shadow-sm">
+                            <span class="priority-dot" [ngClass]="getPriorityClass(task().priority)"></span>
+                            <span class="fw-bold text-dark">{{ task().priority | titlecase }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 text-center border-top pt-4">
+                        <label class="small text-muted d-block mb-2">Assignee</label>
+                        <img [src]="getAvatarUrl(task().assigneeName)"
+                            class="rounded-circle border border-3 border-white shadow-sm mb-2" width="64" height="64">
+                        <div class="fw-bold text-dark">{{ task().assigneeName || 'Unassigned' | titlecase }}</div>
+                    </div>
+
+                    <div class="border-top pt-4">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <i class="fa-regular fa-calendar-check text-primary fs-5"></i>
+                            <div>
+                                <label class="small text-muted d-block lh-1">Due Date</label>
+                                <span class="fw-bold text-dark">{{ task().dueDate | date:'MMMM d, y' }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fa-solid fa-diagram-project text-primary fs-5"></i>
+                            <div>
+                                <label class="small text-muted d-block lh-1">Project</label>
+                                <span class="fw-bold text-dark">{{ task().project | titlecase }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm p-4">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-3">
+                        <i class="fa-solid fa-paperclip me-2 text-primary"></i>Files ({{ task().attachments?.length || 0
+                        }})
+                    </h6>
+                    <div class="list-group list-group-flush">
+                        @for (file of task().attachments; track file) {
+                        <div
+                            class="list-group-item border-0 px-0 py-2 d-flex align-items-center justify-content-between group-hover-actions">
+                            <div class="d-flex align-items-center gap-2 overflow-hidden" style="cursor: default;">
+                                <i class="fa-solid {{ getFileIcon(file) }} text-primary opacity-75"></i>
+                                <span class="text-truncate small fw-medium text-dark" [title]="file.split('_').pop()">
+                                    {{ file.split('_').pop() }}
+                                </span>
+                            </div>
+
+                            <div class="file-actions d-flex gap-1">
+                                <button (click)="viewFile(file)"
+                                    class="btn btn-sm btn-light border-0 p-1 px-2 text-primary" title="View File">
+                                    <i class="fa-solid fa-eye small"></i>
+                                </button>
+
+                                <a [href]="getDownloadUrl(file)" target="_blank" [download]="file.split('_').pop()"
+                                    class="btn btn-sm btn-light border-0 p-1 px-2 text-success" title="Download File">
+                                    <i class="fa-solid fa-download small"></i>
+                                </a>
+                            </div>
+                        </div>
+                        } @empty {
+                        <div class="py-2 text-center text-muted small fst-italic">No files attached.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+</div>
+
+@if (isPreviewOpen()) {
+<div class="custom-modal-overlay" (click)="closePreview()">
+    <div class="custom-modal-container animate-pop" (click)="$event.stopPropagation()">
+
+        <div class="custom-modal-header d-flex justify-content-between align-items-center">
+            <h6 class="m-0 fw-bold d-flex align-items-center">
+                <i class="fa-solid {{ getFileIcon(selectedFileName()) }} me-2 text-primary"></i>
+                <span class="text-truncate" style="max-width: 300px;">
+                    {{ selectedFileName().split('_').pop() }}
+                </span>
+            </h6>
+
+            @if (isImage(selectedFileName())) {
+            <div class="zoom-toolbar d-flex align-items-center gap-2 px-3 border-start border-end mx-auto">
+                <button type="button" class="btn btn-sm btn-light border-0" (click)="zoomOut()"
+                    [disabled]="zoomLevel() <= 0.5">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <span class="small fw-bold text-muted" style="min-width: 45px; text-align: center;">
+                    {{ (zoomLevel() * 100) | number:'1.0-0' }}%
+                </span>
+                <button type="button" class="btn btn-sm btn-light border-0" (click)="zoomIn()"
+                    [disabled]="zoomLevel() >= 3">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <div class="vr mx-1"></div>
+                <button type="button" class="btn btn-sm btn-light border-0" (click)="resetZoom()" title="Reset Zoom">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+            </div>
+            }
+
+            <button type="button" class="btn-close" (click)="closePreview()"></button>
+        </div>
+
+        <div class="custom-modal-body" style="overflow: auto; display: block; text-align: center;">
+            @if (isImage(selectedFileName())) {
+            <div class="image-wrapper py-4" [style.transform]="'scale(' + zoomLevel() + ')'"
+                style="transition: transform 0.2s ease; transform-origin: center top;">
+                <img [src]="previewUrl()" alt="Preview" class="img-fluid shadow-lg rounded">
+            </div>
+            } @else if (isPdf(selectedFileName())) {
+            <iframe [src]="getSafeUrl(previewUrl())" style="width: 100%; height: 100%; border: none;"></iframe>
+            } @else {
+            <div class="text-white text-center py-5">
+                <i class="fa-solid fa-file-circle-exclamation fs-1 mb-3 opacity-50"></i>
+                <p>No preview available for this file type.</p>
+            </div>
+            }
+        </div>
+
+        <div class="custom-modal-footer d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-secondary btn-sm px-4" (click)="closePreview()">Close</button>
+            <a [href]="previewUrl()" target="_blank" [download]="selectedFileName()"
+                class="btn btn-primary btn-sm px-4 shadow-sm">
+                <i class="fa-solid fa-download me-2"></i>Download
+            </a>
+        </div>
+    </div>
+</div>
+}

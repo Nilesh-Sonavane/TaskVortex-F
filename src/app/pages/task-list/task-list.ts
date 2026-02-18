@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { TaskService } from '../../services/task-service';
 
 @Component({
@@ -13,6 +13,7 @@ import { TaskService } from '../../services/task-service';
 })
 export class TaskListComponent implements OnInit {
   private taskService = inject(TaskService);
+  private router = inject(Router);
 
   // --- DATA SIGNALS ---
   allTasks = signal<any[]>([]);
@@ -23,11 +24,9 @@ export class TaskListComponent implements OnInit {
   selectedStatus = signal('All');
   selectedPriority = signal('All');
 
-  // --- PAGINATION SIGNALS (Matching User List Logic) ---
+  // --- PAGINATION SIGNALS ---
   currentPage = signal(1);
   pageSize = signal(5);
-
-  selectedTaskDetail = signal<any | null>(null);
 
   ngOnInit() {
     this.loadTeamTasks();
@@ -42,10 +41,11 @@ export class TaskListComponent implements OnInit {
 
     this.taskService.getTasksByManager(managerId).subscribe({
       next: (data) => {
+        // Only root tasks (parentTask == null) should be in this list
         this.allTasks.set(data);
         this.isLoading.set(false);
       },
-      error: (err) => {
+      error: () => {
         this.isLoading.set(false);
       }
     });
@@ -78,8 +78,30 @@ export class TaskListComponent implements OnInit {
 
   totalPages = computed(() => Math.ceil(this.filteredAllTasks().length / this.pageSize()));
 
-  // --- HELPERS ---
-  onFilterChange() { this.currentPage.set(1); }
+  // --- SINGLE-TABLE HELPERS ---
+
+  /**
+   * Used in the HTML to show "3/5" progress for subtasks
+   */
+  getCompletedSubtasksCount(task: any): number {
+    if (!task.subtasks) return 0;
+    return task.subtasks.filter((st: any) => st.status === 'DONE').length;
+  }
+
+  /**
+   * Resets all filters (used in the @empty table state)
+   */
+  resetFilters() {
+    this.searchQuery.set('');
+    this.selectedStatus.set('All');
+    this.selectedPriority.set('All');
+    this.currentPage.set(1);
+  }
+
+  // --- UI HELPERS ---
+  onFilterChange() {
+    this.currentPage.set(1);
+  }
 
   getStatusClass(status: string): string {
     const s = status?.toUpperCase();
@@ -100,14 +122,6 @@ export class TaskListComponent implements OnInit {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
 
-  // view detail 
-
-  openTaskDetails(task: any) {
-    this.selectedTaskDetail.set(task);
-  }
-
-  closeTaskDetails() {
-    this.selectedTaskDetail.set(null);
-  }
-
+  // NOTE: openTaskDetails and closeTaskDetails are removed 
+  // because we are using routerLink in the HTML now.
 }

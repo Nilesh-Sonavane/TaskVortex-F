@@ -1,11 +1,27 @@
 <div class="page-content">
+    @if (!isLoading && allTasks().length === 0) {
+    <div class="empty-state-container animate-in text-center py-5 shadow-sm rounded-4 bg-white border">
+        <div class="empty-icon-circle mb-4">
+            <i class="fa-solid fa-folder-open text-primary opacity-50" style="font-size: 3rem;"></i>
+        </div>
+        <h3 class="fw-bold text-dark">No Projects or Tasks Assigned</h3>
+        <p class="text-muted mx-auto mb-4" style="max-width: 400px;">
+            It looks like you aren't part of any projects yet. Start by creating a new task or ask your manager to add
+            you to
+            a project.
+        </p>
+        <a routerLink="/tasks/new" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm">
+            <i class="fa-solid fa-plus me-2"></i> Create Your First Task
+        </a>
+    </div>
+    } @else {
     <div class="table-card animate-in">
         <div class="toolbar">
             <div class="d-flex gap-2">
                 <div class="search-box">
                     <i class="fa-solid fa-search"></i>
                     <input type="text" class="form-control" placeholder="Search tasks..." [ngModel]="searchQuery()"
-                        (ngModelChange)="searchQuery.set($event); onFilterChange()">
+                        (ngModelChange)="searchQuery.set($event); onFilterChange()" />
                 </div>
 
                 <select class="form-select" [ngModel]="selectedStatus()"
@@ -48,15 +64,29 @@
                         <td>
                             <div class="d-flex flex-column">
                                 <span class="fw-bold text-dark">{{ task.title | titlecase }}</span>
-                                <span class="small text-muted">ID: #TV-{{ task.id }} • {{ task.project | titlecase
-                                    }}</span>
+                                <span class="small text-muted">
+                                    ID: #TV-{{ task.id }} • {{ task.project | titlecase }}
+                                    @if (task.subtasks && task.subtasks.length > 0) {
+                                    <span class="ms-1 text-primary fw-medium">
+                                        • <i class="fa-solid fa-list-check ms-1"></i>
+                                        {{ getCompletedSubtasksCount(task) }}/{{ task.subtasks.length }}
+                                    </span>
+                                    }
+                                </span>
+                                @if (task.subtasks && task.subtasks.length > 0) {
+                                <div class="progress mt-2" style="height: 4px; width: 100px; background: #eee;">
+                                    <div class="progress-bar bg-primary"
+                                        [style.width.%]="(getCompletedSubtasksCount(task) / task.subtasks.length) * 100">
+                                    </div>
+                                </div>
+                                }
                             </div>
                         </td>
                         <td>
                             @if (task.assigneeName) {
                             <div class="assignee-badge">
                                 <img [src]="getAvatarUrl(task.assigneeName)" class="assignee-avatar"
-                                    [alt]="task.assigneeName">
+                                    [alt]="task.assigneeName" />
                                 <span class="small fw-medium">{{ task.assigneeName | titlecase }}</span>
                             </div>
                             } @else {
@@ -73,94 +103,40 @@
                             <span class="priority-dot" [ngClass]="getPriorityClass(task.priority)"></span>
                             {{ task.priority | titlecase }}
                         </td>
-                        <td>{{ task.dueDate | date:'MMM d, y' }}</td>
+                        <td>{{ task.dueDate | date: 'MMM d, y' }}</td>
                         <td class="text-end">
-                            <button class="action-btn" title="View Details" (click)="openTaskDetails(task)">
+                            <a [routerLink]="['/tasks', task.id]" class="action-btn text-decoration-none"
+                                title="View Details">
                                 <i class="fa-regular fa-eye"></i>
-                            </button>
-                            <a [routerLink]="['/tasks/edit', task.id]" style="text-decoration: none;" class="action-btn"
+                            </a>
+                            <a [routerLink]="['/tasks/edit', task.id]" style="text-decoration: none" class="action-btn"
                                 title="Edit">
                                 <i class="fa-solid fa-pen"></i>
                             </a>
                         </td>
                     </tr>
-                    }
-                    @empty {
+                    } @empty {
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">No tasks found.</td>
+                        <td colspan="6" class="text-center py-5 text-muted">No tasks found!</td>
                     </tr>
                     }
                 </tbody>
             </table>
         </div>
+
         <div class="p-3 border-top border-light d-flex justify-content-between align-items-center">
             <span class="small text-muted">
-                Showing {{ filteredAllTasks().length }} Tasks
-                (Page {{ currentPage() }} of {{ totalPages() }})
+                Showing {{ filteredAllTasks().length }} Tasks (Page {{ currentPage() }} of {{ totalPages() }})
             </span>
             <div class="d-flex gap-2">
                 <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === 1"
-                    (click)="currentPage.set(currentPage() - 1)">Prev</button>
+                    (click)="currentPage.set(currentPage() - 1)">
+                    Prev
+                </button>
                 <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === totalPages()"
-                    (click)="currentPage.set(currentPage() + 1)">Next</button>
-            </div>
-        </div>
-    </div>
-    @if (selectedTaskDetail()) {
-    <div class="modal-backdrop fade show"></div>
-    <div class="modal d-block" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-light border-bottom-0 p-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="badge-status" [ngClass]="getStatusClass(selectedTaskDetail().status)">
-                            {{ selectedTaskDetail().status.replace('_', ' ') | titlecase }}
-                        </span>
-                        <h5 class="modal-title fw-bold mb-0">#TV-{{ selectedTaskDetail().id }}: {{
-                            selectedTaskDetail().title | titlecase }}</h5>
-                    </div>
-                    <button type="button" class="btn-close" (click)="closeTaskDetails()"></button>
-                </div>
-
-                <div class="modal-body p-4">
-                    <div class="row g-4">
-                        <div class="col-md-8">
-                            <h6 class="fw-bold text-muted text-uppercase small mb-3">Task Description</h6>
-                            <p class="text-secondary">{{ selectedTaskDetail().description || 'No description provided.'
-                                | titlecase }}</p>
-                        </div>
-
-                        <div class="col-md-4 border-start ps-4">
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Project</h6>
-                                <p class="fw-medium">{{ selectedTaskDetail().project | titlecase }}</p>
-                            </div>
-                            <div class="mb-4">
-                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Assignee</h6>
-                                <div class="d-flex align-items-center gap-2">
-                                    <img [src]="getAvatarUrl(selectedTaskDetail().assigneeName)" class="assignee-avatar"
-                                        style="width: 24px; height: 24px;">
-                                    <span class="fw-medium">{{ selectedTaskDetail().assigneeName || 'Unassigned'
-                                        | titlecase }}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Due Date</h6>
-                                <p class="fw-medium text-dark"><i
-                                        class="fa-regular fa-calendar-check me-2 text-primary"></i>
-                                    {{ selectedTaskDetail().dueDate | date:'MMM d, y' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light border-top-0 p-3">
-
-                    <button type="button" class="btn btn-secondary px-4" (click)="closeTaskDetails()">Close</button>
-                    <a [routerLink]="['/tasks/edit', selectedTaskDetail().id]" class="btn btn-primary px-4">
-                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Task
-                    </a>
-                </div>
+                    (click)="currentPage.set(currentPage() + 1)">
+                    Next
+                </button>
             </div>
         </div>
     </div>

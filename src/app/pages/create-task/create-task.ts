@@ -1,14 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit, viewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, computed, inject, OnInit, signal, viewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { NgSelectModule } from '@ng-select/ng-select';
 
-// Components
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog';
 import { Loader } from '../../components/loader/loader';
-
-// Services
 import { ProjectService } from '../../services/project-service';
 import { TaskService } from '../../services/task-service';
 import { ToastService } from '../../services/toast';
@@ -23,7 +20,8 @@ import { ToastService } from '../../services/toast';
     RouterModule,
     Loader,
     NgSelectModule,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+
   ],
   templateUrl: './create-task.html',
   styleUrls: ['./create-task.css']
@@ -37,22 +35,27 @@ export class CreateTaskComponent implements OnInit {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
-  // Reference to our Custom Confirm Dialog using Signal-based viewChild
   confirmDialog = viewChild.required<ConfirmDialogComponent>('confirmDialog');
 
-  // UI State
   isDropdownOpen = false;
   isLoading = false;
   isEditMode = false;
   taskId: string | null = null;
   assigneeSearchTerm: string = '';
 
-  // Data
+  // Track if the current task being edited is a subtask
+  isSubtask = false;
+
   taskForm: FormGroup;
   managedProjects: any[] = [];
   filteredEmployees: any[] = [];
   selectedFiles: File[] = [];
   existingAttachments: any[] = [];
+
+  // Inside your class:
+  historyList = signal<any[]>([]);
+  // This automatically stays in sync without re-triggering Change Detection
+  historyCount = computed(() => this.historyList().length);
 
   constructor() {
     this.taskForm = this.fb.group({
@@ -79,51 +82,60 @@ export class CreateTaskComponent implements OnInit {
   }
 
   /**
-   * Fetches existing task data and populates the form
+   * Fetches task data for edit mode and handles Angular lifecycle safety
    */
   loadTaskDataForEdit() {
     this.isLoading = true;
-    this.taskService.getTaskById(this.taskId!).subscribe({
-      next: (task) => {
-        // 1. SET PROJECT FIRST - This triggers setupProjectListener 
-        // which populates filteredEmployees
-        this.taskForm.patchValue({
-          projectId: task.projectId,
-          title: task.title,
-          description: task.description,
-          dueDate: task.dueDate,
-          priority: task.priority
-        });
 
-        // 2. Wrap the selection in setTimeout to allow the listener 
-        // to finish populating the member list
+    this.taskService.getTaskById(Number(this.taskId)).subscribe({
+      next: (task) => {
         setTimeout(() => {
-          // Now that filteredEmployees is populated, set the assignee
+          this.isSubtask = !!task.parentTaskId;
+
+          // 1. Patch the form
+          this.taskForm.patchValue({
+            projectId: task.projectId,
+            title: task.title,
+            description: task.description,
+            dueDate: task.dueDate,
+            priority: task.priority
+          });
+
           this.taskForm.get('assigneeId')?.setValue(task.assigneeId);
 
-          // Update the search term for the UI input
+          // 2. Handle Activity/History Signal
+          // IMPORTANT: Ensure your signal is updated here, not directly in the template
+          if (this.historyList && task.auditLogs) {
+            this.historyList.set(task.auditLogs);
+          }
+
           if (this.selectedAssignee) {
             this.assigneeSearchTerm = this.selectedAssignee.name ||
               `${this.selectedAssignee.firstName} ${this.selectedAssignee.lastName}`;
           }
 
-          // Handle other collections
           this.existingAttachments = task.attachments || [];
+
+          // 3. Populate Subtasks
           this.subtasks.clear();
-          task.subtasks?.forEach((st: any) => {
-            this.subtasks.push(this.fb.control({
-              title: st.title,
-              isCompleted: st.isCompleted
-            }));
-          });
+          if (!this.isSubtask) {
+            task.subtasks?.forEach((st: any) => {
+              this.subtasks.push(this.fb.control({
+                title: st.title,
+                isCompleted: st.status === 'DONE'
+              }));
+            });
+          }
 
           this.isLoading = false;
-          this.cdr.detectChanges();
-        }, 50); // Small delay to ensure project listener finishes
+          // 4. Mark for check after all state changes are done
+          this.cdr.markForCheck();
+        }, 0);
       },
       error: () => {
         this.isLoading = false;
-        this.toast.show('Failed to load task', 'error');
+        this.toast.show('Failed to load task details', 'error');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -154,12 +166,21 @@ export class CreateTaskComponent implements OnInit {
     });
   }
 
-  // --- Subtask & File Helpers ---
   get subtasks() { return this.taskForm.get('subtasks') as FormArray; }
 
   addSubtask(input: HTMLInputElement) {
+    // Prevent adding nested subtasks if editing a subtask
+    if (this.isSubtask) {
+      this.toast.show('A subtask cannot have its own subtasks.', 'error');
+      input.value = '';
+      return;
+    }
+
     if (input.value.trim()) {
-      this.subtasks.push(this.fb.control({ title: input.value, isCompleted: false }));
+      this.subtasks.push(this.fb.control({
+        title: input.value,
+        isCompleted: false
+      }));
       input.value = '';
     }
   }
@@ -178,30 +199,44 @@ export class CreateTaskComponent implements OnInit {
 
   onFileSelected(event: any) {
     if (event.target.files) {
-      for (let file of event.target.files) this.selectedFiles.push(file);
+      for (let file of event.target.files) {
+        this.selectedFiles.push(file);
+      }
     }
   }
 
-  removeFile(index: number) { this.selectedFiles.splice(index, 1); }
+  removeFile(index: number) {
+    this.selectedFiles.splice(index, 1);
+  }
 
   viewFile(fileName: string) {
     window.open(`http://localhost:8080/api/tasks/attachments/${fileName}`, '_blank');
   }
 
   deleteExistingAttachment(fileName: string) {
-    const cleanName = fileName.split('_').pop();
+    const parts = fileName.split('_');
+    const cleanName = parts[parts.length - 1];
+
+    // Retrieve the current user's email for the Audit Log
+    const userJson = localStorage.getItem('user_details');
+    const user = userJson ? JSON.parse(userJson) : null;
+    const email = user ? user.email : 'unknown@taskvortex.com';
 
     this.confirmDialog().open(
-      `Do you want to permanently delete "${cleanName}"? This action cannot be undone.`,
+      `Permanently delete "${cleanName}"?`,
       'Delete File',
       () => {
-        this.taskService.deleteAttachment(this.taskId!, fileName).subscribe({
+        // Pass the email as the third argument
+        this.taskService.deleteAttachment(Number(this.taskId), fileName, email).subscribe({
           next: () => {
             this.existingAttachments = this.existingAttachments.filter(f => f !== fileName);
             this.toast.show('File deleted successfully', 'success');
             this.cdr.detectChanges();
           },
-          error: () => this.toast.show('Failed to delete file', 'error')
+          error: (err) => {
+            console.error("Delete failed:", err);
+            this.toast.show('Error deleting file. Please try again.', 'error');
+          }
         });
       }
     );
@@ -215,29 +250,40 @@ export class CreateTaskComponent implements OnInit {
 
     this.isLoading = true;
     const formData = new FormData();
-    const taskData = { ...this.taskForm.value, id: this.taskId, project: { id: this.taskForm.value.projectId } };
+
+    const userJson = localStorage.getItem('user_details');
+    const user = userJson ? JSON.parse(userJson) : { email: 'unknown@taskvortex.com' };
+
+    // Prepare task data exactly for the Backend Entity structure
+    const taskData = {
+      ...this.taskForm.value,
+      id: this.taskId ? Number(this.taskId) : null,
+      project: { id: this.taskForm.get('projectId')?.value }
+    };
 
     formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
-    this.selectedFiles.forEach(file => formData.append('files', file));
+    formData.append('userEmail', user.email); // Required for Audit Log logic
+
+    if (this.selectedFiles.length > 0) {
+      this.selectedFiles.forEach(file => formData.append('files', file));
+    }
 
     const request = this.isEditMode
-      ? this.taskService.updateTask(this.taskId!, formData)
+      ? this.taskService.updateTask(Number(this.taskId), formData)
       : this.taskService.createTask(formData);
 
     request.subscribe({
       next: () => {
-        this.toast.show(`Task ${this.isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+        this.toast.show('Task saved successfully', 'success');
         this.router.navigate(['/tasks']);
       },
       error: (err) => {
         this.isLoading = false;
-        this.toast.show(err.error?.message || 'Failed to save task', 'error');
-        this.cdr.detectChanges();
+        this.toast.show('Error saving task', 'error');
       }
     });
   }
-
-  // --- Custom Dropdown ---
+  // --- UI Select/Search Helpers ---
   selectMember(member: any) {
     this.taskForm.get('assigneeId')?.setValue(member.id);
     this.assigneeSearchTerm = member.name || `${member.firstName} ${member.lastName}`;

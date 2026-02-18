@@ -57,9 +57,7 @@
                                 <span class="small text-dark text-truncate" style="cursor: pointer; max-width: 70%;"
                                     (click)="viewFile(fileName)" title="Click to view">
                                     <i class="fa-solid fa-paperclip me-2 text-primary"></i>
-
-                                    {{ fileName.includes('_') ? fileName.substring(fileName.indexOf('_') + 1) : fileName
-                                    }}
+                                    {{ fileName.split('_').pop() }}
                                 </span>
 
                                 <div class="d-flex gap-1">
@@ -76,6 +74,7 @@
                             }
                         </div>
                         }
+
                         <input type="file" #fileInput (change)="onFileSelected($event)" multiple hidden>
                         <div class="upload-zone" (click)="fileInput.click()" style="cursor: pointer;">
                             <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -103,29 +102,25 @@
                         }
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">Subtasks</label>
+                    @if (!isSubtask) {
+                    <div class="mb-4 animate-in">
+                        <label class="form-label fw-bold">Subtasks Checklist</label>
                         <div class="input-group mb-2">
                             <input type="text" class="form-control" #newSubtask
                                 (keyup.enter)="addSubtask(newSubtask); $event.preventDefault()"
-                                placeholder="Add a subtask (e.g. Research competitor UI)...">
+                                placeholder="Add a subtask step...">
                             <button class="btn btn-outline-primary" type="button" (click)="addSubtask(newSubtask)">
                                 <i class="fa-solid fa-plus"></i> Add
                             </button>
                         </div>
 
-                        <div class="d-flex flex-column bg-light p-3 rounded-3" style="min-height: 50px;">
-                            @if (subtasks.length === 0) {
-                            <small class="text-muted text-center fst-italic">No subtasks added yet.</small>
-                            }
-
+                        <div class="d-flex flex-column bg-light p-3 rounded-3 border">
                             @for (subtask of subtasks.controls; track $index) {
                             <div
                                 class="d-flex justify-content-between align-items-center bg-white border p-2 mb-2 rounded shadow-sm">
                                 <div class="d-flex align-items-center gap-2">
                                     <input type="checkbox" [checked]="subtask.value.isCompleted"
                                         (change)="subtask.value.isCompleted = !subtask.value.isCompleted">
-
                                     <span [class.text-decoration-line-through]="subtask.value.isCompleted">
                                         {{ subtask.value.title }}
                                     </span>
@@ -135,13 +130,28 @@
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
+                            } @empty {
+                            <small class="text-muted text-center fst-italic">No subtasks added yet.</small>
                             }
                         </div>
                     </div>
+                    } @else {
+                    <div
+                        class="alert alert-warning border-warning bg-warning bg-opacity-10 d-flex align-items-start mb-4 animate-in">
+                        <i class="fa-solid fa-triangle-exclamation me-3 fs-4 text-warning mt-1"></i>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark">Subtask Restriction</div>
+                            <div class="small text-dark opacity-75 mb-2">
+                                You are editing a subtask. To maintain a strict 2-level hierarchy, you cannot add nested
+                                subtasks here.
+                            </div>
+                        </div>
+                    </div>
+                    }
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="p-3 bg-light rounded-3 border border-light-subtle">
+                    <div class="p-3 bg-light rounded-3 border border-light-subtle sticky-top" style="top: 1rem;">
                         <div class="mb-3">
                             <label class="form-label">Project <span class="text-danger">*</span></label>
                             <select class="form-select" formControlName="projectId">
@@ -166,7 +176,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Priority</label>
+                            <label class="form-label">Priority Level</label>
                             <div class="priority-group">
                                 <input type="radio" formControlName="priority" value="HIGH" id="prio-high"
                                     class="priority-radio">
@@ -183,12 +193,12 @@
                         </div>
 
                         <div class="mb-4 position-relative">
-                            <label class="form-label">Assign To <span class="text-danger">*</span></label>
+                            <label class="form-label">Assigned Member <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fa-solid fa-magnifying-glass text-muted"></i>
                                 </span>
-                                <input type="text" class="form-control border-start-0" placeholder="Search member..."
+                                <input type="text" class="form-control border-start-0" placeholder="Search..."
                                     style="text-transform: capitalize;" [(ngModel)]="assigneeSearchTerm"
                                     [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
                                     (blur)="toggleDropdown(false)">
@@ -213,15 +223,17 @@
                             }
 
                             @if (selectedAssignee && !isDropdownOpen) {
-                            <div class="assignee-preview-card d-flex align-items-center p-3 mt-3 animate-in">
-                                <img [src]="getAvatar(selectedAssignee)" class="rounded-circle me-3 border shadow-sm"
-                                    width="50" height="50">
+                            <div
+                                class="assignee-preview-card d-flex align-items-center p-3 mt-3 animate-in shadow-sm bg-white rounded border">
+                                <img [src]="getAvatar(selectedAssignee)" class="rounded-circle me-3 border" width="45"
+                                    height="45">
                                 <div class="d-flex flex-column overflow-hidden">
-                                    <h6 class="mb-0 fw-bold text-dark">
+                                    <h6 class="mb-0 fw-bold text-dark small text-truncate">
                                         {{ selectedAssignee.name || (selectedAssignee.firstName + ' ' +
                                         selectedAssignee.lastName) | titlecase }}
                                     </h6>
-                                    <span class="text-muted small text-truncate">{{ selectedAssignee.email }}</span>
+                                    <span class="text-muted" style="font-size: 0.7rem;">{{ selectedAssignee.email
+                                        }}</span>
                                 </div>
                             </div>
                             }
@@ -233,13 +245,11 @@
             <hr class="border-secondary opacity-10 my-4">
 
             <div class="d-flex justify-content-end gap-3">
-                <button type="button" class="btn-cancel border-0 bg-transparent text-muted"
-                    routerLink="/tasks">Cancel</button>
+                <button type="button" class="btn btn-light border px-4" routerLink="/tasks">Cancel</button>
 
-                <button type="submit" class="btn-submit btn btn-primary px-4"
-                    [disabled]="taskForm.invalid || isLoading">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="taskForm.invalid || isLoading">
                     <i class="fa-solid me-2" [ngClass]="isEditMode ? 'fa-save' : 'fa-plus'"></i>
-                    {{ isEditMode ? 'Update Task' : 'Create Task' }}
+                    {{ isEditMode ? 'Save Changes' : 'Create Task' }}
                 </button>
             </div>
         </form>

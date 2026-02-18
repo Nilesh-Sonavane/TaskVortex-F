@@ -48,7 +48,15 @@ export class TaskService {
   /**
    * Removes a specific file from a task's attachment list.
    */
-  deleteAttachment(taskId: string | number, filename: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${taskId}/attachments/${filename}`);
+  deleteAttachment(taskId: number, filename: string, email: string): Observable<void> {
+    // Pass the email as a query parameter
+    return this.http.delete<void>(
+      `${this.apiUrl}/${taskId}/attachments/${filename}?userEmail=${email}`
+    );
+  }
+
+  // Add to your existing TaskService
+  getTaskHistory(taskId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${taskId}/history`);
   }
 }

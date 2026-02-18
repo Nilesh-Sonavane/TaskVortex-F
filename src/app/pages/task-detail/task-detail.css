@@ -1,0 +1,472 @@
+/* Container & General */
+.page-content {
+    padding: 2rem;
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card Styling */
+.card {
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.3s ease;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Breadcrumbs */
+.breadcrumb-item a {
+    color: #64748b;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: #3b82f6;
+}
+
+/* Subtask Checklist */
+.subtask-list .subtask-item {
+    transition: all 0.2s ease;
+}
+
+.hover-shadow:hover {
+    background-color: #ffffff !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateX(5px);
+}
+
+.border-dashed {
+    border: 2px dashed #e2e8f0 !important;
+}
+
+/* Status Badges (Matching Task List) */
+.badge-status {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.bg-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.bg-progress {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.bg-review {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
+.bg-done {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+/* Priority Dots */
+.priority-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.p-high {
+    background-color: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
+
+.p-med {
+    background-color: #f59e0b;
+}
+
+.p-low {
+    background-color: #10b981;
+}
+
+/* Sidebar Helpers */
+.sticky-top {
+    z-index: 10;
+}
+
+.list-group-item-action {
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.2s;
+}
+
+.list-group-item-action:hover {
+    background-color: #f1f5f9;
+    color: #3b82f6;
+}
+
+/* Typography */
+h2 {
+    letter-spacing: -0.025em;
+}
+
+label {
+    letter-spacing: 0.05em;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .sticky-top {
+        position: static !important;
+    }
+}
+
+.clickable-subtask {
+    transition: all 0.2s ease-in-out;
+}
+
+.clickable-subtask:hover {
+    background-color: #ffffff !important;
+    border-color: #3b82f6 !important;
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.clickable-subtask:active {
+    transform: scale(0.98);
+}
+
+
+
+
+/* --- Root Section --- */
+.audit-trail-wrapper {
+    background-color: #fafbfc;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+}
+
+/* --- Timeline Vertical Line --- */
+.audit-scroll-container {
+    position: relative;
+    padding-left: 5px;
+    padding-right: 10px;
+}
+
+.timeline-line::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    /* Centers line under the 36px avatars */
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e2e8f0;
+    z-index: 0;
+}
+
+/* --- Performer Avatar --- */
+.performer-avatar-container {
+    position: relative;
+    z-index: 2;
+    /* Sits above the timeline line */
+}
+
+/* --- Audit Card Styling --- */
+.audit-card {
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease-in-out;
+}
+
+.audit-card:hover {
+    border-color: #3b82f6 !important;
+    transform: translateX(4px);
+    /* Moves card slightly to indicate focus */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* --- Typography & Badges --- */
+.extra-small {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.action-pill {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.5em 0.8em;
+}
+
+.bg-primary-subtle {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+.bg-success-subtle {
+    background-color: #f0fdf4 !important;
+    color: #15803d !important;
+}
+
+/* --- Deep Inject Logic (For Old/New Badges) --- */
+::ng-deep .audit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+::ng-deep .audit-list li {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px dashed #f1f5f9;
+}
+
+::ng-deep .audit-list li:last-child {
+    border-bottom: none;
+}
+
+::ng-deep .badge-old {
+    background-color: #fff1f2;
+    color: #e11d48;
+    text-decoration: line-through;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+::ng-deep .badge-new {
+    background-color: #f0fdf4;
+    color: #166534;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Utilities --- */
+.text-break {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Scrollbar Customization */
+.audit-scroll-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.audit-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Styling for attachment links inside the audit trail */
+.history-attachment-link {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.history-attachment-link:hover .badge-new {
+    background-color: #dcfce7;
+    /* Slightly darker green on hover */
+    filter: brightness(0.95);
+    text-decoration: underline;
+}
+
+/* Ensure the pointer icon shows up */
+.history-attachment-link * {
+    cursor: pointer;
+}
+
+
+
+/* --- Overlay Backdrop --- */
+/* We use fixed to stay in the eyes of the user regardless of scroll */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    /* Darker slate for better focus */
+    backdrop-filter: blur(2px) !important;
+    z-index: 99999 !important;
+    /* Higher than any sidebar or navbar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+/* --- The Modal Box --- */
+.custom-modal-container {
+    background: #ffffff;
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    /* Keeps modal inside the viewport height */
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    /* Stacks Header, Body, and Footer */
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    margin: auto;
+    /* Mathematical centering */
+}
+
+/* --- Fixed Header & Footer --- */
+.custom-modal-header,
+.custom-modal-footer {
+    flex-shrink: 0;
+    /* Prevents header/footer from shrinking when content is large */
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    z-index: 10;
+}
+
+.custom-modal-header {
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-modal-footer {
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* --- The Body (The Viewer Area) --- */
+.custom-modal-body {
+    flex-grow: 1;
+    /* Forces body to fill all space between header and footer */
+    /* background: #334155; */
+    background: #1e293b;
+
+    /* Dark background for professional document viewing */
+    position: relative;
+    overflow: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- Content Logic --- */
+/* The absolute trick ensures the iframe fills the body exactly without gaps */
+.custom-modal-body iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.custom-modal-body img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    padding: 20px;
+    /* Smooth transition for the zoom effect */
+    transition: transform 0.2s ease-in-out;
+    /* Forces zoom from the center */
+    transform-origin: center center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    background-color: white;
+}
+
+.zoom-toolbar {
+    background: #f8fafc;
+    border-radius: 20px;
+    padding: 2px 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* --- Animation --- */
+.animate-pop {
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Sidebar File List Styling */
+.group-hover-actions {
+    transition: background-color 0.2s ease;
+}
+
+.group-hover-actions:hover {
+    background-color: #f8fafc;
+    /* Very light blue/grey */
+    border-radius: 6px;
+}
+
+.file-actions .btn {
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.file-actions .btn:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.text-truncate {
+    max-width: 150px;
+    /* Adjust based on your sidebar width */
+}
+
+/* --- Scroll Lock Utility --- */
+/* Add this class to your <body> via TypeScript when modal is open */
+.no-scroll {
+    overflow: hidden !important;
+}
