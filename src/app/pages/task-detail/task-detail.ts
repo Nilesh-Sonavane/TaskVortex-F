@@ -3,6 +3,7 @@ import { Component, HostListener, inject, OnDestroy, OnInit, signal } from '@ang
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser'; // Add this import
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { Loader } from '../../components/loader/loader';
 import { TaskService } from '../../services/task-service';
 
 // This tells TypeScript that Bootstrap is loaded globally (via angular.json or CDN)
@@ -11,7 +12,7 @@ declare var bootstrap: any;
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, Loader],
   templateUrl: './task-detail.html',
   styleUrls: ['./task-detail.css']
 })
@@ -22,7 +23,7 @@ export class TaskDetail implements OnInit, OnDestroy {
 
   task = signal<any>(null);
   historyList = signal<any[]>([]);
-  isLoading = signal(true);
+  isLoading = true;
   isPreviewOpen = signal(false);
 
   selectedFileName = signal<string>('');
@@ -41,15 +42,15 @@ export class TaskDetail implements OnInit, OnDestroy {
   }
 
   loadTaskDetails(id: number) {
-    this.isLoading.set(true);
+    this.isLoading = true;
     this.taskService.getTaskById(id).subscribe({
       next: (data) => {
         this.task.set(data);
         this.loadTaskHistory(id);
-        this.isLoading.set(false);
+        this.isLoading = false;
         window.scrollTo(0, 0);
       },
-      error: () => this.isLoading.set(false)
+      error: () => this.isLoading = false
     });
   }
 
