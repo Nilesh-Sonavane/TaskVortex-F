@@ -279,3 +279,14 @@
      position: relative;
      overflow: visible !important;
  }
+
+
+ /* Customizes the date picker icon color */
+ input[type="date"]::-webkit-calendar-picker-indicator {
+     cursor: pointer;
+     filter: invert(30%) sepia(100%) saturate(500%) hue-rotate(190deg);
+ }
+
+ .extra-small {
+     font-size: 0.75rem;
+ }

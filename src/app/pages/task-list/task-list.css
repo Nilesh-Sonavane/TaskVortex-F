@@ -186,3 +186,74 @@
   .text-uppercase.small {
       letter-spacing: 0.5px;
   }
+
+
+  /* Update these in your task-list.css to replace the old dark colors */
+  .badge-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+      border: 1px solid transparent;
+  }
+
+  .bg-not-started {
+      background-color: #f8f9fa;
+      color: #495057;
+      border-color: #dee2e6;
+  }
+
+  .bg-deployment-in-progress {
+      background-color: #e7f1ff;
+      color: #0d6efd;
+      border-color: #cfe2ff;
+  }
+
+  .bg-re-deployment-in-progress {
+      background-color: #e0f7fa;
+      color: #00838f;
+      border-color: #b2ebf2;
+  }
+
+  .bg-deployment-complete {
+      background-color: #f3e5f5;
+      color: #6a1b9a;
+      border-color: #e1bee7;
+  }
+
+  .bg-testing-in-progress {
+      background-color: #f3f0ff;
+      color: #6f42c1;
+      border-color: #dcd3ff;
+  }
+
+  .bg-testing-complete {
+      background-color: #e6fffa;
+      color: #00695c;
+      border-color: #b2f2bb;
+  }
+
+  .bg-re-testing-in-progress {
+      background-color: #fff0f6;
+      color: #d63384;
+      border-color: #ffdeeb;
+  }
+
+  .bg-in-uat {
+      background-color: #fff4e6;
+      color: #d9480f;
+      border-color: #ffd8a8;
+  }
+
+  .bg-hold {
+      background-color: #fff9db;
+      color: #856404;
+      border-color: #ffe066;
+  }
+
+  .bg-cancelled {
+      background-color: #fff5f5;
+      color: #c92a2a;
+      border-color: #ffc9c9;
+  }

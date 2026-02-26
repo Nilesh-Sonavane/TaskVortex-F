@@ -11,6 +11,7 @@ import { AdminProjectComponent } from './pages/admin-project/admin-project';
 import { AdminUsersComponent } from './pages/admin-users/admin-users';
 import { CreateTaskComponent } from './pages/create-task/create-task';
 import { DashboardComponent } from './pages/dashboard/dashboard';
+import { MyTasksComponent } from './pages/my-tasks/my-tasks';
 import { TaskDetail } from './pages/task-detail/task-detail';
 import { TaskListComponent } from './pages/task-list/task-list';
 import { Layout } from './shared/layout/layout';
@@ -47,6 +48,13 @@ export const routes: Routes = [
             { path: 'tasks/new', component: CreateTaskComponent, title: 'Create Task | TaskVortex' },
             { path: 'tasks/edit/:id', component: CreateTaskComponent, title: 'Edit Task | TaskVortex' },
             { path: 'tasks/:id', component: TaskDetail, title: 'Task Details | TaskVortex' },
+
+            // --- Employee Routes (Tasks) ---
+            { path: 'my-tasks', component: MyTasksComponent, title: 'My Tasks | TaskVortex' },
+            // Employees access detail here: /my-tasks/1
+            { path: 'my-tasks/:id', component: TaskDetail, title: 'Task Details | TaskVortex' },
+
+
 
             // Redirect root to dashboard
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

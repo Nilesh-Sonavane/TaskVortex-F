@@ -59,4 +59,39 @@ export class TaskService {
   getTaskHistory(taskId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/${taskId}/history`);
   }
+
+
+  getTasksByAssignee(userId: number): Observable<any[]> {
+    // This must match the @GetMapping("/assignee/{userId}") in your Java Controller
+    return this.http.get<any[]>(`${this.apiUrl}/assignee/${userId}`);
+  }
+
+  updateTaskStatus(taskId: number, status: string): Observable<any> {
+    // Use a PATCH or PUT request depending on your backend implementation
+    return this.http.patch(`${this.apiUrl}/${taskId}/status?status=${status}`, {});
+  }
+
+  // Add this method inside your TaskService class
+  submitTaskWork(taskId: number, formData: FormData): Observable<any> {
+    return this.http.post(`http://localhost:8080/api/tasks/${taskId}/submit`, formData);
+  }
+
+  /**
+   * Manager approves the submitted work.
+   * Moves task status to DONE.
+   */
+  approveTask(taskId: number, email: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${taskId}/approve?userEmail=${email}`, {});
+  }
+
+  /**
+   * Manager rejects the submitted work.
+   * Moves task status back to IN_PROGRESS with a reason.
+   */
+  rejectTask(taskId: number, email: string, reason: string): Observable<any> {
+    return this.http.patch(
+      `${this.apiUrl}/${taskId}/reject?userEmail=${email}&reason=${encodeURIComponent(reason)}`,
+      {}
+    );
+  }
 }

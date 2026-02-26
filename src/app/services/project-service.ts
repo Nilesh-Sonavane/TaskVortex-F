@@ -30,6 +30,11 @@ export class ProjectService {
     return this.http.get<Project[]>(`${this.apiUrl}/manager/${managerId}`);
   }
 
+  getProjectsByUser(userId: number): Observable<any[]> {
+    // This endpoint should return projects where the user is either Manager or Member
+    return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
+  }
+
   // 2. Get Single Project
   getProjectById(id: number): Observable<Project> {
     return this.http.get<Project>(`${this.apiUrl}/${id}`);

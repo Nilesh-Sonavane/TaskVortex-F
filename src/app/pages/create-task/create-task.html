@@ -57,7 +57,7 @@
                                 <span class="small text-dark text-truncate" style="cursor: pointer; max-width: 70%;"
                                     (click)="viewFile(fileName)" title="Click to view">
                                     <i class="fa-solid fa-paperclip me-2 text-primary"></i>
-                                    {{ fileName.split('_').pop() }}
+                                    {{ getCleanFileName(fileName) }}
                                 </span>
 
                                 <div class="d-flex gap-1">
@@ -152,6 +152,7 @@
 
                 <div class="col-lg-4">
                     <div class="p-3 bg-light rounded-3 border border-light-subtle sticky-top" style="top: 1rem;">
+
                         <div class="mb-3">
                             <label class="form-label">Project <span class="text-danger">*</span></label>
                             <select class="form-select" formControlName="projectId">
@@ -164,15 +165,27 @@
                             <div class="mt-2 animate-in">
                                 <small class="text-danger fw-medium">
                                     <i class="fa-solid fa-circle-exclamation me-1"></i>
-                                    No projects assigned to you. You must be part of a project to create tasks.
+                                    No projects assigned to you.
                                 </small>
                             </div>
                             }
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Due Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" formControlName="dueDate">
+                            <label class="form-label fw-bold small text-muted">Due Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fa-solid fa-calendar-day text-primary"></i>
+                                </span>
+                                <input type="date" id="dueDate" formControlName="dueDate"
+                                    class="form-control border-start-0 ps-0" [min]="minDate">
+                            </div>
+
+                            @if (taskForm.get('dueDate')?.touched && taskForm.get('dueDate')?.errors?.['pastDate']) {
+                            <div class="text-danger extra-small mt-1">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Due date cannot be in the past.
+                            </div>
+                            }
                         </div>
 
                         <div class="mb-4">
@@ -198,13 +211,13 @@
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fa-solid fa-magnifying-glass text-muted"></i>
                                 </span>
-                                <input type="text" class="form-control border-start-0" placeholder="Search..."
+                                <input type="text" class="form-control border-start-0" placeholder="Search team..."
                                     style="text-transform: capitalize;" [(ngModel)]="assigneeSearchTerm"
                                     [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
-                                    (blur)="toggleDropdown(false)">
+                                    (blur)="toggleDropdown(false)" [disabled]="currentUser?.role === 'EMPLOYEE'">
                             </div>
 
-                            @if (isDropdownOpen && searchedEmployees.length > 0) {
+                            @if (isDropdownOpen && searchedEmployees.length > 0 && currentUser?.role !== 'EMPLOYEE') {
                             <div class="custom-dropdown-results shadow-lg border animate-in">
                                 @for (emp of searchedEmployees; track emp.id) {
                                 <div class="dropdown-item-row" (click)="selectMember(emp)">
@@ -245,7 +258,9 @@
             <hr class="border-secondary opacity-10 my-4">
 
             <div class="d-flex justify-content-end gap-3">
-                <button type="button" class="btn btn-light border px-4" routerLink="/tasks">Cancel</button>
+                <button type="button" class="btn btn-light border px-4" [routerLink]="getCancelRoute()">
+                    Cancel
+                </button>
 
                 <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="taskForm.invalid || isLoading">
                     <i class="fa-solid me-2" [ngClass]="isEditMode ? 'fa-save' : 'fa-plus'"></i>

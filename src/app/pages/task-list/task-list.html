@@ -27,10 +27,16 @@
                 <select class="form-select" [ngModel]="selectedStatus()"
                     (ngModelChange)="selectedStatus.set($event); onFilterChange()">
                     <option value="All">Status: All</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="REVIEW">Review</option>
-                    <option value="DONE">Done</option>
+                    <option value="NOT_STARTED">Not Started</option>
+                    <option value="DEPLOYMENT_IN_PROGRESS">Deployment in Progress</option>
+                    <option value="RE_DEPLOYMENT_IN_PROGRESS">Re-Deployment</option>
+                    <option value="DEPLOYMENT_COMPLETE">Deployment Complete</option>
+                    <option value="TESTING_IN_PROGRESS">Testing in Progress</option>
+                    <option value="RE_TESTING_IN_PROGRESS">Re-Testing</option>
+                    <option value="TESTING_COMPLETE">Testing Complete</option>
+                    <option value="IN_UAT">In UAT</option>
+                    <option value="HOLD">Hold</option>
+                    <option value="CANCELLED">Cancelled</option>
                 </select>
 
                 <select class="form-select" [ngModel]="selectedPriority()"

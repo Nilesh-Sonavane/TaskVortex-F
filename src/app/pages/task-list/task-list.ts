@@ -15,16 +15,13 @@ export class TaskListComponent implements OnInit {
   private taskService = inject(TaskService);
   private router = inject(Router);
 
-  // --- DATA SIGNALS ---
   allTasks = signal<any[]>([]);
   isLoading = signal(true);
 
-  // --- FILTER SIGNALS ---
   searchQuery = signal('');
   selectedStatus = signal('All');
   selectedPriority = signal('All');
 
-  // --- PAGINATION SIGNALS ---
   currentPage = signal(1);
   pageSize = signal(5);
 
@@ -41,7 +38,6 @@ export class TaskListComponent implements OnInit {
 
     this.taskService.getTasksByManager(managerId).subscribe({
       next: (data) => {
-        // Only root tasks (parentTask == null) should be in this list
         this.allTasks.set(data);
         this.isLoading.set(false);
       },
@@ -51,7 +47,6 @@ export class TaskListComponent implements OnInit {
     });
   }
 
-  // --- REACTIVE FILTER LOGIC ---
   filteredAllTasks = computed(() => {
     const term = this.searchQuery().toLowerCase();
     const statusFilter = this.selectedStatus();
@@ -61,54 +56,41 @@ export class TaskListComponent implements OnInit {
       const matchesSearch = task.title.toLowerCase().includes(term) ||
         (task.assigneeName && task.assigneeName.toLowerCase().includes(term));
 
-      const normalizedStatus = statusFilter.toUpperCase().replace(' ', '_');
-      const matchesStatus = statusFilter === 'All' || task.status === normalizedStatus;
-
+      const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
       const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter.toUpperCase();
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
   });
 
-  // --- PAGINATION LOGIC ---
   paginatedTasks = computed(() => {
     const startIndex = (this.currentPage() - 1) * this.pageSize();
     return this.filteredAllTasks().slice(startIndex, startIndex + this.pageSize());
   });
 
-  totalPages = computed(() => Math.ceil(this.filteredAllTasks().length / this.pageSize()));
-
-  // --- SINGLE-TABLE HELPERS ---
+  totalOfTasks = computed(() => this.filteredAllTasks().length);
+  totalPages = computed(() => Math.ceil(this.totalOfTasks() / this.pageSize()));
 
   /**
-   * Used in the HTML to show "3/5" progress for subtasks
+   * UPDATED: In your new workflow, a subtask is "completed" if it reaches
+   * any of these final stages.
    */
   getCompletedSubtasksCount(task: any): number {
     if (!task.subtasks) return 0;
-    return task.subtasks.filter((st: any) => st.status === 'DONE').length;
+    const terminalStatuses = ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'IN_UAT'];
+    return task.subtasks.filter((st: any) => terminalStatuses.includes(st.status)).length;
   }
 
-  /**
-   * Resets all filters (used in the @empty table state)
-   */
-  resetFilters() {
-    this.searchQuery.set('');
-    this.selectedStatus.set('All');
-    this.selectedPriority.set('All');
-    this.currentPage.set(1);
-  }
-
-  // --- UI HELPERS ---
   onFilterChange() {
     this.currentPage.set(1);
   }
 
+  /**
+   * UPDATED: Matches the soft pastel CSS classes we created
+   */
   getStatusClass(status: string): string {
-    const s = status?.toUpperCase();
-    if (s === 'IN_PROGRESS') return 'bg-progress';
-    if (s === 'REVIEW') return 'bg-review';
-    if (s === 'DONE') return 'bg-done';
-    return 'bg-pending';
+    if (!status) return 'bg-not-started';
+    return 'bg-' + status.toLowerCase().replace(/_/g, '-');
   }
 
   getPriorityClass(priority: string): string {
@@ -121,7 +103,4 @@ export class TaskListComponent implements OnInit {
   getAvatarUrl(name: string): string {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
-
-  // NOTE: openTaskDetails and closeTaskDetails are removed 
-  // because we are using routerLink in the HTML now.
 }

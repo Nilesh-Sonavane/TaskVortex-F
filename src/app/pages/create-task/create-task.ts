@@ -21,7 +21,6 @@ import { ToastService } from '../../services/toast';
     Loader,
     NgSelectModule,
     ConfirmDialogComponent,
-
   ],
   templateUrl: './create-task.html',
   styleUrls: ['./create-task.css']
@@ -35,6 +34,9 @@ export class CreateTaskComponent implements OnInit {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
+  minDate: string = '';
+  currentUser: any = null;
+
   confirmDialog = viewChild.required<ConfirmDialogComponent>('confirmDialog');
 
   isDropdownOpen = false;
@@ -42,8 +44,6 @@ export class CreateTaskComponent implements OnInit {
   isEditMode = false;
   taskId: string | null = null;
   assigneeSearchTerm: string = '';
-
-  // Track if the current task being edited is a subtask
   isSubtask = false;
 
   taskForm: FormGroup;
@@ -52,19 +52,24 @@ export class CreateTaskComponent implements OnInit {
   selectedFiles: File[] = [];
   existingAttachments: any[] = [];
 
-  // Inside your class:
   historyList = signal<any[]>([]);
-  // This automatically stays in sync without re-triggering Change Detection
-  historyCount = computed(() => this.historyList().length);
+  historyCount = computed(() => {
+    const list = this.historyList();
+    return Array.isArray(list) ? list.length : 0;
+  });
 
   constructor() {
+    const today = new Date();
+    this.minDate = today.toISOString().split('T')[0];
+
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
       assigneeId: [null, Validators.required],
-      dueDate: ['', Validators.required],
+      dueDate: ['', [Validators.required, this.futureDateValidator.bind(this)]],
       priority: ['MEDIUM', Validators.required],
       projectId: [null, Validators.required],
+      status: ['NOT_STARTED'],
       subtasks: this.fb.array([])
     });
   }
@@ -72,6 +77,11 @@ export class CreateTaskComponent implements OnInit {
   ngOnInit() {
     this.taskId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.taskId;
+
+    const userJson = localStorage.getItem('user_details');
+    if (userJson) {
+      this.currentUser = JSON.parse(userJson);
+    }
 
     this.loadInitialData();
     this.setupProjectListener();
@@ -81,32 +91,48 @@ export class CreateTaskComponent implements OnInit {
     }
   }
 
-  /**
-   * Fetches task data for edit mode and handles Angular lifecycle safety
-   */
+  futureDateValidator(control: any) {
+    if (!control.value) return null;
+    const selectedDate = new Date(control.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate < today ? { pastDate: true } : null;
+  }
+
+  getCleanFileName(fileName: string): string {
+    if (!fileName) return '';
+    const index = fileName.indexOf('_');
+    return index !== -1 ? fileName.substring(index + 1) : fileName;
+  }
+
   loadTaskDataForEdit() {
     this.isLoading = true;
-
     this.taskService.getTaskById(Number(this.taskId)).subscribe({
       next: (task) => {
         setTimeout(() => {
+          if (task.auditLogs) this.historyList.set(task.auditLogs);
           this.isSubtask = !!task.parentTaskId;
+          this.existingAttachments = task.attachments || [];
 
-          // 1. Patch the form
           this.taskForm.patchValue({
             projectId: task.projectId,
             title: task.title,
             description: task.description,
             dueDate: task.dueDate,
-            priority: task.priority
+            priority: task.priority,
+            assigneeId: task.assigneeId,
+            status: task.status
           });
 
-          this.taskForm.get('assigneeId')?.setValue(task.assigneeId);
-
-          // 2. Handle Activity/History Signal
-          // IMPORTANT: Ensure your signal is updated here, not directly in the template
-          if (this.historyList && task.auditLogs) {
-            this.historyList.set(task.auditLogs);
+          this.subtasks.clear();
+          if (!this.isSubtask) {
+            task.subtasks?.forEach((st: any) => {
+              this.subtasks.push(this.fb.control({
+                title: st.title,
+                // UPDATED: Check against new terminal statuses instead of 'DONE'
+                isCompleted: ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'IN_UAT'].includes(st.status)
+              }));
+            });
           }
 
           if (this.selectedAssignee) {
@@ -114,21 +140,7 @@ export class CreateTaskComponent implements OnInit {
               `${this.selectedAssignee.firstName} ${this.selectedAssignee.lastName}`;
           }
 
-          this.existingAttachments = task.attachments || [];
-
-          // 3. Populate Subtasks
-          this.subtasks.clear();
-          if (!this.isSubtask) {
-            task.subtasks?.forEach((st: any) => {
-              this.subtasks.push(this.fb.control({
-                title: st.title,
-                isCompleted: st.status === 'DONE'
-              }));
-            });
-          }
-
           this.isLoading = false;
-          // 4. Mark for check after all state changes are done
           this.cdr.markForCheck();
         }, 0);
       },
@@ -141,11 +153,8 @@ export class CreateTaskComponent implements OnInit {
   }
 
   loadInitialData() {
-    const userJson = localStorage.getItem('user_details');
-    if (!userJson) return;
-    const user = JSON.parse(userJson);
-
-    this.projectService.getProjectsByManager(user.id).subscribe({
+    if (!this.currentUser) return;
+    this.projectService.getProjectsByUser(this.currentUser.id).subscribe({
       next: (data) => {
         this.managedProjects = data;
         this.cdr.detectChanges();
@@ -156,11 +165,20 @@ export class CreateTaskComponent implements OnInit {
   setupProjectListener() {
     this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
       const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
-      this.filteredEmployees = selectedProject?.members ? [...selectedProject.members] : [];
 
-      if (!this.isLoading) {
-        this.taskForm.get('assigneeId')?.setValue(null);
-        this.assigneeSearchTerm = '';
+      if (this.currentUser?.role === 'EMPLOYEE') {
+        this.filteredEmployees = selectedProject?.members ?
+          selectedProject.members.filter((m: any) => m.id === this.currentUser.id) : [];
+
+        if (this.filteredEmployees.length > 0) {
+          this.selectMember(this.filteredEmployees[0]);
+        }
+      } else {
+        this.filteredEmployees = selectedProject?.members ? [...selectedProject.members] : [];
+        if (!this.isLoading) {
+          this.taskForm.get('assigneeId')?.setValue(null);
+          this.assigneeSearchTerm = '';
+        }
       }
       this.cdr.detectChanges();
     });
@@ -169,7 +187,6 @@ export class CreateTaskComponent implements OnInit {
   get subtasks() { return this.taskForm.get('subtasks') as FormArray; }
 
   addSubtask(input: HTMLInputElement) {
-    // Prevent adding nested subtasks if editing a subtask
     if (this.isSubtask) {
       this.toast.show('A subtask cannot have its own subtasks.', 'error');
       input.value = '';
@@ -199,44 +216,40 @@ export class CreateTaskComponent implements OnInit {
 
   onFileSelected(event: any) {
     if (event.target.files) {
+      const MAX_SIZE_MB = 10;
+      const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
       for (let file of event.target.files) {
+        if (file.size > MAX_SIZE_BYTES) {
+          this.toast.show(`File "${file.name}" exceeds the 10MB limit.`, 'error');
+          continue;
+        }
         this.selectedFiles.push(file);
       }
+      event.target.value = '';
     }
   }
 
-  removeFile(index: number) {
-    this.selectedFiles.splice(index, 1);
-  }
+  removeFile(index: number) { this.selectedFiles.splice(index, 1); }
 
   viewFile(fileName: string) {
     window.open(`http://localhost:8080/api/tasks/attachments/${fileName}`, '_blank');
   }
 
   deleteExistingAttachment(fileName: string) {
-    const parts = fileName.split('_');
-    const cleanName = parts[parts.length - 1];
-
-    // Retrieve the current user's email for the Audit Log
-    const userJson = localStorage.getItem('user_details');
-    const user = userJson ? JSON.parse(userJson) : null;
-    const email = user ? user.email : 'unknown@taskvortex.com';
+    const cleanName = this.getCleanFileName(fileName);
+    const email = this.currentUser?.email || 'unknown@taskvortex.com';
 
     this.confirmDialog().open(
       `Permanently delete "${cleanName}"?`,
       'Delete File',
       () => {
-        // Pass the email as the third argument
         this.taskService.deleteAttachment(Number(this.taskId), fileName, email).subscribe({
           next: () => {
             this.existingAttachments = this.existingAttachments.filter(f => f !== fileName);
             this.toast.show('File deleted successfully', 'success');
             this.cdr.detectChanges();
           },
-          error: (err) => {
-            console.error("Delete failed:", err);
-            this.toast.show('Error deleting file. Please try again.', 'error');
-          }
+          error: () => this.toast.show('Error deleting file.', 'error')
         });
       }
     );
@@ -245,24 +258,36 @@ export class CreateTaskComponent implements OnInit {
   onSubmit() {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
+      this.toast.show('Please fill all required fields', 'error');
       return;
     }
 
     this.isLoading = true;
     const formData = new FormData();
+    const formValue = this.taskForm.value;
 
-    const userJson = localStorage.getItem('user_details');
-    const user = userJson ? JSON.parse(userJson) : { email: 'unknown@taskvortex.com' };
-
-    // Prepare task data exactly for the Backend Entity structure
     const taskData = {
-      ...this.taskForm.value,
+      ...formValue,
       id: this.taskId ? Number(this.taskId) : null,
-      project: { id: this.taskForm.get('projectId')?.value }
+      project: { id: formValue.projectId }
     };
 
+    if (taskData.subtasks && Array.isArray(taskData.subtasks)) {
+      taskData.subtasks = taskData.subtasks.map((sub: any) => {
+        const { project, assigneeName, assigneeEmail, ...cleanSub } = sub;
+        return {
+          ...cleanSub,
+          project: null,
+          // UPDATED: Map boolean back to the new enums instead of DONE/PENDING
+          status: sub.isCompleted ? 'TESTING_COMPLETE' : 'NOT_STARTED'
+        };
+      });
+    }
+
+    delete (taskData as any).projectId;
+
     formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
-    formData.append('userEmail', user.email); // Required for Audit Log logic
+    formData.append('userEmail', this.currentUser?.email || 'unknown@taskvortex.com');
 
     if (this.selectedFiles.length > 0) {
       this.selectedFiles.forEach(file => formData.append('files', file));
@@ -275,15 +300,20 @@ export class CreateTaskComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.toast.show('Task saved successfully', 'success');
-        this.router.navigate(['/tasks']);
+        if (this.currentUser?.role === 'EMPLOYEE') {
+          this.router.navigate(['/my-tasks']);
+        } else {
+          this.router.navigate(['/tasks']);
+        }
       },
       error: (err) => {
         this.isLoading = false;
-        this.toast.show('Error saving task', 'error');
+        this.toast.show(err.error?.message || 'Error saving task.', 'error');
+        this.cdr.markForCheck();
       }
     });
   }
-  // --- UI Select/Search Helpers ---
+
   selectMember(member: any) {
     this.taskForm.get('assigneeId')?.setValue(member.id);
     this.assigneeSearchTerm = member.name || `${member.firstName} ${member.lastName}`;
@@ -296,6 +326,10 @@ export class CreateTaskComponent implements OnInit {
       this.isDropdownOpen = state;
       this.cdr.detectChanges();
     }, 200);
+  }
+
+  getCancelRoute(): string {
+    return this.currentUser?.role === 'EMPLOYEE' ? '/my-tasks' : '/tasks';
   }
 
   get selectedAssignee() {
@@ -312,5 +346,12 @@ export class CreateTaskComponent implements OnInit {
   getAvatar(member: any) {
     const name = member.name || `${member.firstName} ${member.lastName}`;
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`;
+  }
+
+  // Add this helper method to fix the TS2339 error
+  getStatusBadgeClass(s: string) {
+    if (!s) return 'bg-not-started';
+    // Converts 'DEPLOYMENT_IN_PROGRESS' to 'bg-deployment-in-progress'
+    return `bg-${s.toLowerCase().replace(/_/g, '-')}`;
   }
 }
