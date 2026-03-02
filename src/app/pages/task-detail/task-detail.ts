@@ -34,7 +34,7 @@ export class TaskDetail implements OnInit, OnDestroy {
   isLoading = signal(true);
   isPreviewOpen = signal(false);
 
-  // --- ACTIVITY FILTER SIGNALS ---
+  // Activity Filter Signals
   showFilters = signal(false);
   startDate = signal<string>('');
   endDate = signal<string>('');
@@ -53,7 +53,6 @@ export class TaskDetail implements OnInit, OnDestroy {
     if (!start && !end) return logs;
 
     return logs.filter(log => {
-      // Normalize dates to midnight for accurate day-to-day comparison
       const logDate = new Date(log.timestamp).setHours(0, 0, 0, 0);
       const dateStart = start ? new Date(start).setHours(0, 0, 0, 0) : null;
       const dateEnd = end ? new Date(end).setHours(0, 0, 0, 0) : null;
@@ -65,7 +64,7 @@ export class TaskDetail implements OnInit, OnDestroy {
     });
   });
 
-  // Permission Logic
+  // --- PERMISSION LOGIC ---
   canEdit = computed(() => {
     const userJson = localStorage.getItem('user_details');
     const currentTask = this.task();
@@ -88,7 +87,67 @@ export class TaskDetail implements OnInit, OnDestroy {
     });
   }
 
-  // --- FILTER METHODS ---
+  // --- DYNAMIC ASSIGNMENT LOGIC (Manager vs Employee View) ---
+
+  getAssignmentLabel = () => {
+    const userJson = localStorage.getItem('user_details');
+    const currentTask = this.task();
+    if (!userJson || !currentTask) return 'Assignment';
+
+    const user = JSON.parse(userJson);
+
+    // If I am the Assignee -> Show who is managing me
+    if (currentTask.assigneeId === user.id) {
+      return 'Project Managed By';
+    }
+
+    // If I am the Creator (Manager) -> Show who I assigned it to
+    if (currentTask.creatorEmail === user.email) {
+      return 'Task Assigned To';
+    }
+
+    return 'Assigned To';
+  };
+
+  getAssignmentName = () => {
+    const userJson = localStorage.getItem('user_details');
+    const currentTask = this.task();
+    if (!userJson || !currentTask) return 'Unassigned';
+
+    const user = JSON.parse(userJson);
+
+    // Scenario: I am the Employee -> Show Manager's name (the creator)
+    if (currentTask.assigneeId === user.id) {
+      return currentTask.createdBy || 'Project Manager';
+    }
+
+    // Scenario: I am the Manager -> Show the Employee's name I assigned it to
+    if (currentTask.creatorEmail === user.email) {
+      return currentTask.assigneeName || 'Employee';
+    }
+
+    // Fallback for Admins or third parties
+    return currentTask.assigneeName;
+  };
+
+  getAssignmentEmail = () => {
+    const userJson = localStorage.getItem('user_details');
+    const currentTask = this.task();
+    if (!userJson || !currentTask) return '';
+
+    const user = JSON.parse(userJson);
+
+    if (currentTask.assigneeId === user.id) {
+      return currentTask.creatorEmail; // Show Manager's Email
+    }
+    return currentTask.assigneeEmail; // Show Employee's Email
+  };
+
+  getAssignmentAvatar = () => {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.getAssignmentName())}&background=random&size=128`;
+  };
+
+  // --- FILTER & DATA METHODS ---
   toggleFilters() {
     this.showFilters.update(v => !v);
   }
@@ -99,6 +158,7 @@ export class TaskDetail implements OnInit, OnDestroy {
   }
 
   loadTaskDetails(id: number) {
+
     this.isLoading.set(true);
     this.taskService.getTaskById(id).subscribe({
       next: (data) => {
@@ -169,15 +229,6 @@ export class TaskDetail implements OnInit, OnDestroy {
     return 'fa-file text-muted';
   }
 
-  getAssignmentName = () => this.task()?.assigneeName || 'Unassigned';
-  getAssignmentEmail = () => this.task()?.assigneeEmail || 'No Email';
-
-  getAssignmentLabel = () => {
-    const user = JSON.parse(localStorage.getItem('user_details') || '{}');
-    return this.task()?.assigneeId === user.id ? 'My Task' : 'Assigned To';
-  };
-
-  getAssignmentAvatar = () => `https://ui-avatars.com/api/?name=${encodeURIComponent(this.getAssignmentName())}&background=random&size=128`;
   getCompletedSubtasksCount = (t: any) => t?.subtasks?.filter((st: any) => st.status === 'DONE').length || 0;
 
   getStatusClass = (s: string) => {
@@ -188,12 +239,13 @@ export class TaskDetail implements OnInit, OnDestroy {
   getStatusLabel(statusKey: string): string {
     const statusMap: { [key: string]: string } = {
       'NOT_STARTED': 'Not Started',
-      'DEPLOYMENT_IN_PROGRESS': 'Deployment in Progress',
-      'RE_DEPLOYMENT_IN_PROGRESS': 'Re-Deployment in Progress',
-      'DEPLOYMENT_COMPLETE': 'Deployment Complete',
+      'DEVELOPMENT_IN_PROGRESS': 'Development in Progress',
+      'DEVELOPMENT_COMPLETE': 'Development Complete',
+      'RE_DEVELOPMENT_IN_PROGRESS': 'Re-Development in Progress',
       'TESTING_IN_PROGRESS': 'Testing in Progress',
-      'RE_TESTING_IN_PROGRESS': 'Re-Testing in Progress',
       'TESTING_COMPLETE': 'Testing Complete',
+      'RE_TESTING_IN_PROGRESS': 'Re-Testing in Progress',
+      'DEPLOYMENT_COMPLETE': 'Deployment Complete',
       'IN_UAT': 'In UAT',
       'HOLD': 'Hold',
       'CANCELLED': 'Cancelled'
@@ -206,6 +258,7 @@ export class TaskDetail implements OnInit, OnDestroy {
   getBackRoute = () => this.router.url.startsWith('/my-tasks') ? '/my-tasks' : '/tasks';
   getSubtaskRoute = (id: number) => [this.getBackRoute(), id];
 
+  // --- FILE PREVIEW METHODS ---
   viewFile(fileName: string) {
     this.zoomLevel.set(1);
     this.selectedFileName.set(fileName);

@@ -51,13 +51,19 @@ export class AdminProjectComponent implements OnInit {
             this.allProjects = [];
             return;
           }
-          // SIMPLIFIED MAPPING: Just add icons/colors. 
-          // We rely on the DTO fields (managerName, departmentName) directly.
-          this.allProjects = data.map((p: any) => ({
-            ...p,
-            icon: this.assignRandomIcon(p.id),
-            iconColorClass: this.assignRandomColor(p.id)
-          }));
+
+          this.allProjects = data.map((p: any) => {
+            // THE FIX: Calculate count from the actual members array
+            // This prevents "wrong count" issues if p.membersCount is stale
+            const actualMemberCount = p.members ? p.members.length : 0;
+
+            return {
+              ...p,
+              membersCount: actualMemberCount, // Overwrite with real-time length
+              icon: this.assignRandomIcon(p.id),
+              iconColorClass: this.assignRandomColor(p.id)
+            };
+          });
 
           this.applyFilters();
         },

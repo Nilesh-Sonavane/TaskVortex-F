@@ -136,6 +136,8 @@
 }
 
 /* --- ACTION BUTTON --- */
+
+
 .action-btn {
     width: 34px;
     height: 34px;
@@ -148,6 +150,22 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+}
+
+.action-btn.edit {
+    color: #0d6efd;
+    /* Blue */
+}
+
+.action-btn.edit:hover {
+    background: #e2e3fe;
+    color: #444def;
+
+}
+
+.action-btn.delete {
+    color: #dc3545;
+    /* Red */
 }
 
 .action-btn.delete:hover {

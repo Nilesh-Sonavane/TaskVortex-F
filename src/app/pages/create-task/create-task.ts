@@ -36,7 +36,6 @@ export class CreateTaskComponent implements OnInit {
 
   minDate: string = '';
   currentUser: any = null;
-
   confirmDialog = viewChild.required<ConfirmDialogComponent>('confirmDialog');
 
   isDropdownOpen = false;
@@ -129,7 +128,6 @@ export class CreateTaskComponent implements OnInit {
             task.subtasks?.forEach((st: any) => {
               this.subtasks.push(this.fb.control({
                 title: st.title,
-                // UPDATED: Check against new terminal statuses instead of 'DONE'
                 isCompleted: ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'IN_UAT'].includes(st.status)
               }));
             });
@@ -154,32 +152,55 @@ export class CreateTaskComponent implements OnInit {
 
   loadInitialData() {
     if (!this.currentUser) return;
-    this.projectService.getProjectsByUser(this.currentUser.id).subscribe({
+
+    this.isLoading = true;
+    // Use the new role-based endpoint from the backend
+    this.projectService.getAccessibleProjects(this.currentUser.email).subscribe({
       next: (data) => {
         this.managedProjects = data;
+
+        // If creating a new task and only one project is available, auto-select it
+        if (this.managedProjects.length === 1 && !this.isEditMode) {
+          this.taskForm.get('projectId')?.setValue(this.managedProjects[0].id);
+        }
+
+        this.isLoading = false;
         this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toast.show('Error loading accessible projects', 'error');
+        console.log(err)
+        this.cdr.markForCheck();
       }
     });
   }
 
   setupProjectListener() {
     this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
+      // Find the project object from our accessible list
       const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
 
-      if (this.currentUser?.role === 'EMPLOYEE') {
-        this.filteredEmployees = selectedProject?.members ?
-          selectedProject.members.filter((m: any) => m.id === this.currentUser.id) : [];
+      // Reset assignee search and ID if the project changes (but not during initial edit load)
+      if (!this.isLoading) {
+        this.taskForm.get('assigneeId')?.setValue(null);
+        this.assigneeSearchTerm = '';
+        this.isDropdownOpen = false;
+      }
 
-        if (this.filteredEmployees.length > 0) {
-          this.selectMember(this.filteredEmployees[0]);
+      // Update the employee list to show ONLY members of this specific project
+      if (selectedProject && selectedProject.members) {
+        this.filteredEmployees = [...selectedProject.members];
+
+        // If the user is an employee, they can only assign the task to themselves
+        if (this.currentUser?.role === 'EMPLOYEE') {
+          const self = this.filteredEmployees.find(m => m.id === this.currentUser.id);
+          if (self) this.selectMember(self);
         }
       } else {
-        this.filteredEmployees = selectedProject?.members ? [...selectedProject.members] : [];
-        if (!this.isLoading) {
-          this.taskForm.get('assigneeId')?.setValue(null);
-          this.assigneeSearchTerm = '';
-        }
+        this.filteredEmployees = [];
       }
+
       this.cdr.detectChanges();
     });
   }
@@ -278,7 +299,6 @@ export class CreateTaskComponent implements OnInit {
         return {
           ...cleanSub,
           project: null,
-          // UPDATED: Map boolean back to the new enums instead of DONE/PENDING
           status: sub.isCompleted ? 'TESTING_COMPLETE' : 'NOT_STARTED'
         };
       });
@@ -336,11 +356,19 @@ export class CreateTaskComponent implements OnInit {
     return this.filteredEmployees.find(e => e.id == this.taskForm.get('assigneeId')?.value);
   }
 
+  /**
+   * UPDATED: Added logic to search by both Name and Email.
+   */
   get searchedEmployees() {
-    const term = this.assigneeSearchTerm.toLowerCase();
-    return this.filteredEmployees.filter(e =>
-      (e.name || `${e.firstName} ${e.lastName}`).toLowerCase().includes(term)
-    );
+    const term = this.assigneeSearchTerm.toLowerCase().trim();
+    if (!term) return this.filteredEmployees;
+
+    return this.filteredEmployees.filter(e => {
+      const fullName = (e.name || `${e.firstName} ${e.lastName}`).toLowerCase();
+      const email = (e.email || '').toLowerCase();
+      // Returns true if either name or email includes the search term
+      return fullName.includes(term) || email.includes(term);
+    });
   }
 
   getAvatar(member: any) {
@@ -348,10 +376,8 @@ export class CreateTaskComponent implements OnInit {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`;
   }
 
-  // Add this helper method to fix the TS2339 error
   getStatusBadgeClass(s: string) {
     if (!s) return 'bg-not-started';
-    // Converts 'DEPLOYMENT_IN_PROGRESS' to 'bg-deployment-in-progress'
     return `bg-${s.toLowerCase().replace(/_/g, '-')}`;
   }
 }

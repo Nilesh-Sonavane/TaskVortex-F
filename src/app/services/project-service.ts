@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { AuthService } from '../auth/auth';
 import { Project } from '../models/project';
 
 @Injectable({
@@ -9,10 +10,18 @@ import { Project } from '../models/project';
 export class ProjectService {
 
   private http = inject(HttpClient);
-  // Base URL for projects
+  private auth = inject(AuthService); // Injecting your updated AuthService
   private apiUrl = 'http://localhost:8080/api/projects';
 
   constructor() { }
+
+  /**
+   * Helper to generate performerId parameter
+   */
+  private getPerformerParams(): HttpParams {
+    const userId = this.auth.currentUser?.id;
+    return new HttpParams().set('performerId', userId ? userId.toString() : '');
+  }
 
   /**
    * 1. Get All Projects (Admin view)
@@ -22,16 +31,13 @@ export class ProjectService {
   }
 
   /**
-   * NEW: Get Projects Assigned to a Specific Manager
-   * This ensures Manager A cannot see Manager B's projects.
-   * Backend Endpoint: GET /api/projects/manager/{managerId}
+   * Get Projects Assigned to a Specific Manager
    */
   getProjectsByManager(managerId: number): Observable<Project[]> {
     return this.http.get<Project[]>(`${this.apiUrl}/manager/${managerId}`);
   }
 
   getProjectsByUser(userId: number): Observable<any[]> {
-    // This endpoint should return projects where the user is either Manager or Member
     return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
   }
 
@@ -40,27 +46,35 @@ export class ProjectService {
     return this.http.get<Project>(`${this.apiUrl}/${id}`);
   }
 
-  // 3. Create Project
+  // 3. Create Project - Now sends ?performerId=...
   addProject(projectData: any): Observable<Project> {
-    return this.http.post<Project>(this.apiUrl, projectData);
+    const params = this.getPerformerParams();
+    return this.http.post<Project>(this.apiUrl, projectData, { params });
   }
 
-  // 4. Update Project Details
+  // 4. Update Project Details - Now sends ?performerId=...
   updateProject(id: number, projectData: any): Observable<Project> {
-    return this.http.put<Project>(`${this.apiUrl}/${id}`, projectData);
+    const params = this.getPerformerParams();
+    return this.http.put<Project>(`${this.apiUrl}/${id}`, projectData, { params });
   }
 
-  // 5. Update Status Only (Archive/Restore)
+  // 5. Update Status Only (Archive/Restore) - Now sends ?status=...&performerId=...
   updateStatus(id: number, status: string): Observable<Project> {
+    const params = this.getPerformerParams().set('status', status);
     return this.http.patch<Project>(
       `${this.apiUrl}/${id}/status`,
       {},
-      { params: { status: status } }
+      { params: params }
     );
   }
 
-  // 6. Delete Project (Hard Delete)
+  // 6. Delete Project (Hard Delete) - Now sends ?performerId=...
   deleteProject(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    const params = this.getPerformerParams();
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params });
+  }
+
+  getAccessibleProjects(email: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/accessible?email=${email}`);
   }
 }

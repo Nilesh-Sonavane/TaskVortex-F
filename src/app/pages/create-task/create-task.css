@@ -290,3 +290,14 @@
  .extra-small {
      font-size: 0.75rem;
  }
+
+
+ /* Display text normally while typing (focused) */
+ .assignee-input:focus {
+     text-transform: none;
+ }
+
+ /* Display text as capitalized when blurred */
+ .assignee-input:not(:focus) {
+     text-transform: capitalize;
+ }

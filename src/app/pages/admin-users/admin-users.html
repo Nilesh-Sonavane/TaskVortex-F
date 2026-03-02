@@ -1,6 +1,9 @@
+@if (isLoading()) {
+<app-loader></app-loader>
+}
+<app-confirm-dialog #confirmDialog></app-confirm-dialog>
 <div class="page-content">
     <div class="table-container animate-in">
-
         <div class="toolbar">
             <div class="d-flex gap-2">
 
@@ -71,14 +74,25 @@
                                 {{ user.role }}
                             </span>
                         </td>
-                        <td><span class="status-dot status-active"></span> Active</td>
-
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="status-dot"
+                                    [ngClass]="user.active ? 'status-active' : 'status-inactive'"></span>
+                                <span [class.text-muted]="!user.active">{{ user.active ? 'Active' : 'Inactive' }}</span>
+                            </div>
+                        </td>
                         <td>{{ user.department || 'N/A' }}</td>
 
                         <td class="text-end">
-                            <button class="action-btn" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                            <button class="action-btn delete" title="Delete"><i
-                                    class="fa-regular fa-trash-can"></i></button>
+                            <button class="action-btn" title="Edit" [routerLink]="['/edit-user', user.id]">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button class="action-btn" [ngClass]="user.active ? 'deactivate' : 'activate'"
+                                [title]="user.active ? 'Deactivate User' : 'Activate User'"
+                                (click)="toggleStatus(user)">
+                                <i class="fa-solid"
+                                    [ngClass]="user.active ? 'fa-toggle-on text-success' : 'fa-toggle-off text-muted'"></i>
+                            </button>
                         </td>
                     </tr>
                     } @empty {

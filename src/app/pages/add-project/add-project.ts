@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Loader } from '../../components/loader/loader';
 import { ProjectService } from '../../services/project-service';
 import { ToastService } from '../../services/toast';
@@ -19,10 +19,14 @@ export class AddProjectComponent implements OnInit {
   private projectService = inject(ProjectService);
   private userService = inject(UserService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
   isLoading = false;
+  isEditMode = false;
+  projectId: number | null = null;
+
   users: any[] = [];
   managers: any[] = [];
   employees: any[] = [];
@@ -32,62 +36,105 @@ export class AddProjectComponent implements OnInit {
     name: '',
     key: '',
     description: '',
-    managerId: null,
-    startDate: '',
-    endDate: '',
+    managerId: null as number | null,
+    startDate: new Date().toISOString().split('T')[0],
     memberIds: new Set<number>()
   };
 
   ngOnInit() {
-    this.loadUsers();
+    this.route.paramMap.subscribe(params => {
+      const idParam = params.get('id');
+      if (idParam) {
+        this.isEditMode = true;
+        this.projectId = Number(idParam);
+      }
+      this.loadUsers();
+    });
   }
 
   loadUsers() {
-    this.isLoading = true; // Use local loader state if you want, or just rely on global
+    this.isLoading = true;
     this.userService.getAllUsers().subscribe({
       next: (data) => {
         this.users = data;
         this.processUsers();
-        this.isLoading = false;
-        this.cdr.detectChanges();
+        if (this.isEditMode && this.projectId) {
+          this.loadProjectForEdit();
+        } else {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
       },
       error: () => {
         this.toast.show('Failed to load users', 'error');
         this.isLoading = false;
+      }
+    });
+  }
+  loadProjectForEdit() {
+    if (!this.projectId) return;
+    this.projectService.getProjectById(this.projectId).subscribe({
+      next: (project: any) => {
+        // Console log for final confirmation
+        console.log('Backend Data:', project);
+
+        // --- MAPPING BASED ON YOUR LOG ---
+        this.projectData = {
+          name: project.name || '',
+
+          // Fix: Use projectKey from your log
+          key: project.projectKey || '',
+
+          description: project.description || '',
+
+          // Fix: Use managerId directly as it is already a number in your log
+          managerId: project.managerId ? Number(project.managerId) : null,
+
+          startDate: project.startDate || '',
+
+          // Map members list to Set
+          memberIds: new Set(project.members?.map((m: any) => m.id) || [])
+        };
+
+        this.isLoading = false;
+
+        // Trigger change detection to update the dropdown selection
         this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.toast.show('Failed to load project details', 'error');
       }
     });
   }
 
   processUsers() {
-    if (!this.users) return;
-
-    this.managers = this.users.filter(u => {
-      const role = (u.role || '').toUpperCase();
-      return role === 'ADMIN' || role === 'MANAGER';
-    });
-
-    this.employees = this.users.filter(u => {
-      const role = (u.role || '').toUpperCase();
-      return role === 'EMPLOYEE' || role === 'ADMIN' || role == 'MANAGER' || role === '';
-    });
+    this.managers = this.users.filter(u => ['ADMIN', 'MANAGER'].includes(u.role?.toUpperCase()));
+    this.employees = this.users;
   }
 
-  // Search Filter
   get filteredEmployees() {
-    if (!this.memberSearchTerm) return this.employees;
-    const term = this.memberSearchTerm.toLowerCase();
-    return this.employees.filter(u =>
-      (u.firstName + ' ' + u.lastName).toLowerCase().includes(term) ||
-      (u.jobTitle || '').toLowerCase().includes(term)
-    );
+    let list = this.employees;
+    if (this.projectData.managerId) {
+      const mId = Number(this.projectData.managerId);
+      list = list.filter(u => u.id != mId);
+      if (this.projectData.memberIds.has(mId)) {
+        this.projectData.memberIds.delete(mId);
+      }
+    }
+    if (this.memberSearchTerm) {
+      const term = this.memberSearchTerm.toLowerCase();
+      list = list.filter(u =>
+        (u.firstName + ' ' + u.lastName).toLowerCase().includes(term) ||
+        (u.jobTitle || '').toLowerCase().includes(term) ||
+        (u.email || '').toLowerCase().includes(term)
+      );
+    }
+    return list;
   }
 
   generateKey(name: string) {
-    if (!name) {
-      this.projectData.key = '';
-      return;
-    }
+    if (this.isEditMode || !name) return;
     const cleanName = name.replace(/[^a-zA-Z0-9]/g, '');
     this.projectData.key = cleanName.substring(0, 4).toUpperCase();
   }
@@ -100,46 +147,28 @@ export class AddProjectComponent implements OnInit {
     }
   }
 
-  getAvatar(user: any) {
-    return `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`;
-  }
+  getAvatar = (user: any) => `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`;
 
-  // --- MATCHING SUBMIT LOGIC ---
   onSubmit() {
-    // Basic Logic Check: Dates
-    if (this.projectData.startDate && this.projectData.endDate) {
-      if (new Date(this.projectData.endDate) < new Date(this.projectData.startDate)) {
-        this.toast.show('End Date cannot be before Start Date', 'error');
-        return;
-      }
-    }
-
     this.isLoading = true;
-
     const payload = {
       ...this.projectData,
       memberIds: Array.from(this.projectData.memberIds)
     };
 
-    this.projectService.addProject(payload).subscribe({
+    const request = (this.isEditMode && this.projectId)
+      ? this.projectService.updateProject(this.projectId, payload)
+      : this.projectService.addProject(payload);
+
+    request.subscribe({
       next: () => {
         this.router.navigate(['/admin-projects']).then(() => {
-          this.toast.show('Project created successfully!', 'success');
+          this.toast.show(this.isEditMode ? 'Project updated!' : 'Project created!', 'success');
         });
       },
       error: (err) => {
         this.isLoading = false;
-        console.log('Full Error:', err);
-
-        let msg = 'Failed to create project.';
-
-        if (err.status === 403) {
-          msg = 'Access Denied: You do not have permission to create projects.';
-        } else if (err.status === 400 && err.error) {
-          msg = typeof err.error === 'string' ? err.error : (err.error.message || msg);
-        }
-
-        this.toast.show(msg, 'error');
+        this.toast.show(err.error?.message || 'Operation failed', 'error');
         this.cdr.detectChanges();
       }
     });

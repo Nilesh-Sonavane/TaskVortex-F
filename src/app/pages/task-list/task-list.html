@@ -1,23 +1,27 @@
+@if (isLoading()) {
+<app-loader></app-loader>
+}
 <div class="page-content">
-    @if (!isLoading && allTasks().length === 0) {
-    <div class="empty-state-container animate-in text-center py-5 shadow-sm rounded-4 bg-white border">
-        <div class="empty-icon-circle mb-4">
-            <i class="fa-solid fa-folder-open text-primary opacity-50" style="font-size: 3rem;"></i>
-        </div>
-        <h3 class="fw-bold text-dark">No Projects or Tasks Assigned</h3>
-        <p class="text-muted mx-auto mb-4" style="max-width: 400px;">
-            It looks like you aren't part of any projects yet. Start by creating a new task or ask your manager to add
-            you to
-            a project.
-        </p>
-        <a routerLink="/tasks/new" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm">
-            <i class="fa-solid fa-plus me-2"></i> Create Your First Task
-        </a>
-    </div>
-    } @else {
     <div class="table-card animate-in">
         <div class="toolbar">
             <div class="d-flex gap-2">
+                @if (auth.isManager() && managers().length > 0) {
+                <div class="manager-filter-box d-flex align-items-center bg-light border rounded px-2">
+                    <i class="fa-solid fa-user-tie text-primary small me-2"></i>
+                    <select class="form-select form-select-sm border-0 bg-transparent fw-bold text-dark"
+                        style="min-width: 200px; box-shadow: none;" [ngModel]="selectedManagerId()"
+                        (ngModelChange)="onManagerChange($event)">
+
+                        @for (m of managers(); track m.id) {
+                        <option [value]="m.id">
+                            {{ m.id === auth.currentUser?.id ? 'Me (' + m.firstName + ')' : 'Team: ' + m.firstName + ' '
+                            + m.lastName |titlecase }}
+                        </option>
+                        }
+                    </select>
+                </div>
+                }
+
                 <div class="search-box">
                     <i class="fa-solid fa-search"></i>
                     <input type="text" class="form-control" placeholder="Search tasks..." [ngModel]="searchQuery()"
@@ -28,12 +32,13 @@
                     (ngModelChange)="selectedStatus.set($event); onFilterChange()">
                     <option value="All">Status: All</option>
                     <option value="NOT_STARTED">Not Started</option>
-                    <option value="DEPLOYMENT_IN_PROGRESS">Deployment in Progress</option>
-                    <option value="RE_DEPLOYMENT_IN_PROGRESS">Re-Deployment</option>
-                    <option value="DEPLOYMENT_COMPLETE">Deployment Complete</option>
+                    <option value="DEVELOPMENT_IN_PROGRESS">Development in Progress</option>
+                    <option value="DEVELOPMENT_COMPLETE">Development Complete</option>
+                    <option value="RE_DEVELOPMENT_IN_PROGRESS">Re-Development in Progress</option>
                     <option value="TESTING_IN_PROGRESS">Testing in Progress</option>
-                    <option value="RE_TESTING_IN_PROGRESS">Re-Testing</option>
                     <option value="TESTING_COMPLETE">Testing Complete</option>
+                    <option value="RE_TESTING_IN_PROGRESS">Re-Testing in Progress</option>
+                    <option value="DEPLOYMENT_COMPLETE">Deployment Complete</option>
                     <option value="IN_UAT">In UAT</option>
                     <option value="HOLD">Hold</option>
                     <option value="CANCELLED">Cancelled</option>
@@ -146,5 +151,4 @@
             </div>
         </div>
     </div>
-    }
 </div>

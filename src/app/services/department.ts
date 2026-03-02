@@ -1,21 +1,29 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Department } from '../models/department';
+import { inject, Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {
-  http = inject(HttpClient);
+  private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/departments';
 
-  getAll() {
-    return this.http.get<Department[]>(this.apiUrl);
+  getAll(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl);
   }
 
-  create(department: Department) {
-    return this.http.post<Department>(this.apiUrl, department);
+  getById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
 
-  delete(id: number) {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  create(department: any, email: string) {
+    return this.http.post(this.apiUrl, department, { params: { email } });
+  }
+
+  update(id: number, department: any, email: string) {
+    return this.http.put(`${this.apiUrl}/${id}`, department, { params: { email } });
+  }
+
+  delete(id: number, email: string) {
+    return this.http.delete(`${this.apiUrl}/${id}`, { params: { email } });
   }
 }

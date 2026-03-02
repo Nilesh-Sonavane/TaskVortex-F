@@ -1,31 +1,35 @@
 export interface Project {
-    id: number;
+    id?: number; // Optional for new projects
     name: string;
     description?: string;
+    key: string; // Added: Needed for your generateKey logic
 
-    // Backend sends 'ACTIVE', 'ON_HOLD', etc.
+    // Status logic
     status: 'ACTIVE' | 'ON_HOLD' | 'ARCHIVED' | 'COMPLETED';
 
-    icon: string; // e.g., "fa-globe"
-    createdDate: string; // "2026-02-06"
-    progress: number;
+    icon?: string;
+    createdDate?: string;
+    startDate?: string; // Added: Matches your projectData structure
+    progress?: number;
 
-    // Backend sends the full Department object
-    department: {
+    // Hierarchy Data
+    department?: {
         id: number;
         name: string;
     };
 
-    // Backend sends the full User object
-    manager: {
+    manager?: {
         id: number;
         firstName: string;
         lastName: string;
         email: string;
     };
 
-    // Optional: Frontend specific helper properties
-    // We will calculate these in the component/html
+    // --- FIX FOR TS2339 ERROR ---
+    managerId?: number | null; // Needed for the [(ngModel)] binding
+    members?: any[]; // The full list of users returned by the backend
+
+    // Optional Helpers
     iconColorClass?: string;
-    membersCount?: number; // Backend doesn't send this yet, we can default it
+    membersCount?: number;
 }

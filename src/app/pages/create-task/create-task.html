@@ -155,118 +155,133 @@
 
                         <div class="mb-3">
                             <label class="form-label">Project <span class="text-danger">*</span></label>
-                            <select class="form-select" formControlName="projectId">
+                            <select class="form-select shadow-sm" formControlName="projectId">
                                 <option [ngValue]="null" disabled selected>Select a project...</option>
+
                                 @for (project of managedProjects; track project.id) {
-                                <option [value]="project.id">{{ project.name | titlecase }}</option>
+                                <option [value]="project.id">
+                                    {{ project.name | titlecase }} ({{ project.projectKey }})
+                                </option>
                                 }
                             </select>
-                            @if (managedProjects.length === 0) {
-                            <div class="mt-2 animate-in">
+
+                            @if (managedProjects.length > 0 && currentUser?.role=="ADMIN") {
+                            <div class="mt-2 text-muted animate-in">
+                                <i class="fa-solid fa-circle-info me-1"></i>
+                                Showing projects where you are an
+                                <span class="fw-bold">{{ currentUser?.role }}</span>.
+                            </div>
+                            }@else {
+                            <small class="text-danger fw-medium">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                                No projects assigned to you.
+                            </small>
+                            }
+                            @if(managedProjects.length < 0) { <div class="mt-2 text-muted animate-in">
                                 <small class="text-danger fw-medium">
                                     <i class="fa-solid fa-circle-exclamation me-1"></i>
                                     No projects assigned to you.
                                 </small>
-                            </div>
-                            }
+                        </div>
+                        }
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted">Due Date</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fa-solid fa-calendar-day text-primary"></i>
+                            </span>
+                            <input type="date" id="dueDate" formControlName="dueDate"
+                                class="form-control border-start-0 ps-0" [min]="minDate">
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted">Due Date</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="fa-solid fa-calendar-day text-primary"></i>
-                                </span>
-                                <input type="date" id="dueDate" formControlName="dueDate"
-                                    class="form-control border-start-0 ps-0" [min]="minDate">
-                            </div>
+                        @if (taskForm.get('dueDate')?.touched && taskForm.get('dueDate')?.errors?.['pastDate']) {
+                        <div class="text-danger extra-small mt-1">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> Due date cannot be in the past.
+                        </div>
+                        }
+                    </div>
 
-                            @if (taskForm.get('dueDate')?.touched && taskForm.get('dueDate')?.errors?.['pastDate']) {
-                            <div class="text-danger extra-small mt-1">
-                                <i class="fa-solid fa-circle-exclamation me-1"></i> Due date cannot be in the past.
-                            </div>
-                            }
+                    <div class="mb-4">
+                        <label class="form-label">Priority Level</label>
+                        <div class="priority-group">
+                            <input type="radio" formControlName="priority" value="HIGH" id="prio-high"
+                                class="priority-radio">
+                            <label for="prio-high" class="priority-label">High</label>
+
+                            <input type="radio" formControlName="priority" value="MEDIUM" id="prio-med"
+                                class="priority-radio">
+                            <label for="prio-med" class="priority-label">Medium</label>
+
+                            <input type="radio" formControlName="priority" value="LOW" id="prio-low"
+                                class="priority-radio">
+                            <label for="prio-low" class="priority-label">Low</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4 position-relative">
+                        <label class="form-label">Assigned Member <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fa-solid fa-magnifying-glass text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 assignee-input"
+                                placeholder="Search team..." [(ngModel)]="assigneeSearchTerm"
+                                [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
+                                (blur)="toggleDropdown(false)" [disabled]="currentUser?.role === 'EMPLOYEE'">
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">Priority Level</label>
-                            <div class="priority-group">
-                                <input type="radio" formControlName="priority" value="HIGH" id="prio-high"
-                                    class="priority-radio">
-                                <label for="prio-high" class="priority-label">High</label>
-
-                                <input type="radio" formControlName="priority" value="MEDIUM" id="prio-med"
-                                    class="priority-radio">
-                                <label for="prio-med" class="priority-label">Medium</label>
-
-                                <input type="radio" formControlName="priority" value="LOW" id="prio-low"
-                                    class="priority-radio">
-                                <label for="prio-low" class="priority-label">Low</label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4 position-relative">
-                            <label class="form-label">Assigned Member <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="fa-solid fa-magnifying-glass text-muted"></i>
-                                </span>
-                                <input type="text" class="form-control border-start-0" placeholder="Search team..."
-                                    style="text-transform: capitalize;" [(ngModel)]="assigneeSearchTerm"
-                                    [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
-                                    (blur)="toggleDropdown(false)" [disabled]="currentUser?.role === 'EMPLOYEE'">
-                            </div>
-
-                            @if (isDropdownOpen && searchedEmployees.length > 0 && currentUser?.role !== 'EMPLOYEE') {
-                            <div class="custom-dropdown-results shadow-lg border animate-in">
-                                @for (emp of searchedEmployees; track emp.id) {
-                                <div class="dropdown-item-row" (click)="selectMember(emp)">
-                                    <img [src]="getAvatar(emp)" class="rounded-circle border" width="35" height="35">
-                                    <div class="ms-3 overflow-hidden">
-                                        <div class="fw-bold small text-dark lh-1">
-                                            {{ emp.name || (emp.firstName + ' ' + emp.lastName) | titlecase }}
-                                        </div>
-                                        <div class="text-muted text-truncate mt-1" style="font-size: 0.75rem;">
-                                            {{ emp.email }}
-                                        </div>
+                        @if (isDropdownOpen && searchedEmployees.length > 0 && currentUser?.role !== 'EMPLOYEE') {
+                        <div class="custom-dropdown-results shadow-lg border animate-in">
+                            @for (emp of searchedEmployees; track emp.id) {
+                            <div class="dropdown-item-row" (click)="selectMember(emp)">
+                                <img [src]="getAvatar(emp)" class="rounded-circle border" width="35" height="35">
+                                <div class="ms-3 overflow-hidden">
+                                    <div class="fw-bold small text-dark lh-1">
+                                        {{ emp.name || (emp.firstName + ' ' + emp.lastName) | titlecase }}
+                                    </div>
+                                    <div class="text-muted text-truncate mt-1" style="font-size: 0.75rem;">
+                                        {{ emp.email }}
                                     </div>
                                 </div>
-                                }
-                            </div>
-                            }
-
-                            @if (selectedAssignee && !isDropdownOpen) {
-                            <div
-                                class="assignee-preview-card d-flex align-items-center p-3 mt-3 animate-in shadow-sm bg-white rounded border">
-                                <img [src]="getAvatar(selectedAssignee)" class="rounded-circle me-3 border" width="45"
-                                    height="45">
-                                <div class="d-flex flex-column overflow-hidden">
-                                    <h6 class="mb-0 fw-bold text-dark small text-truncate">
-                                        {{ selectedAssignee.name || (selectedAssignee.firstName + ' ' +
-                                        selectedAssignee.lastName) | titlecase }}
-                                    </h6>
-                                    <span class="text-muted" style="font-size: 0.7rem;">{{ selectedAssignee.email
-                                        }}</span>
-                                </div>
                             </div>
                             }
                         </div>
+                        }
+
+                        @if (selectedAssignee && !isDropdownOpen) {
+                        <div
+                            class="assignee-preview-card d-flex align-items-center p-3 mt-3 animate-in shadow-sm bg-white rounded border">
+                            <img [src]="getAvatar(selectedAssignee)" class="rounded-circle me-3 border" width="45"
+                                height="45">
+                            <div class="d-flex flex-column overflow-hidden">
+                                <h6 class="mb-0 fw-bold text-dark small text-truncate">
+                                    {{ selectedAssignee.name || (selectedAssignee.firstName + ' ' +
+                                    selectedAssignee.lastName) | titlecase }}
+                                </h6>
+                                <span class="text-muted" style="font-size: 0.7rem;">{{ selectedAssignee.email
+                                    }}</span>
+                            </div>
+                        </div>
+                        }
                     </div>
                 </div>
             </div>
-
-            <hr class="border-secondary opacity-10 my-4">
-
-            <div class="d-flex justify-content-end gap-3">
-                <button type="button" class="btn btn-light border px-4" [routerLink]="getCancelRoute()">
-                    Cancel
-                </button>
-
-                <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="taskForm.invalid || isLoading">
-                    <i class="fa-solid me-2" [ngClass]="isEditMode ? 'fa-save' : 'fa-plus'"></i>
-                    {{ isEditMode ? 'Save Changes' : 'Create Task' }}
-                </button>
-            </div>
-        </form>
     </div>
+
+    <hr class="border-secondary opacity-10 my-4">
+
+    <div class="d-flex justify-content-end gap-3">
+        <button type="button" class="btn btn-light border px-4" [routerLink]="getCancelRoute()">
+            Cancel
+        </button>
+
+        <button type="submit" class="btn btn-primary px-4 shadow-sm" [disabled]="taskForm.invalid || isLoading">
+            <i class="fa-solid me-2" [ngClass]="isEditMode ? 'fa-save' : 'fa-plus'"></i>
+            {{ isEditMode ? 'Save Changes' : 'Create Task' }}
+        </button>
+    </div>
+    </form>
+</div>
 </div>

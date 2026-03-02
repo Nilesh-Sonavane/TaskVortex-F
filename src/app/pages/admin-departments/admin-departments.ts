@@ -17,6 +17,7 @@ import { ToastService } from '../../services/toast';
 export class AdminDepartmentsComponent {
   deptService = inject(DepartmentService);
   toast = inject(ToastService);
+  currentUser: any = null;
 
   @ViewChild(ConfirmDialogComponent) confirmDialog!: ConfirmDialogComponent;
 
@@ -30,6 +31,10 @@ export class AdminDepartmentsComponent {
   pageSize = signal(5);
 
   constructor() {
+    const userJson = localStorage.getItem('user_details');
+    if (userJson) {
+      this.currentUser = JSON.parse(userJson);
+    }
     this.loadDepartments();
   }
 
@@ -97,12 +102,21 @@ export class AdminDepartmentsComponent {
   }
 
   performDelete(id: number) {
-    this.deptService.delete(id).subscribe({
+    this.isLoading.set(true);
+    // Real-world: Pass the performer's email to the backend for Audit Logs
+    const email = this.currentUser?.email || 'admin@taskvortex.com';
+
+    this.deptService.delete(id, email).subscribe({
       next: () => {
         this.toast.show('Deleted successfully', 'success');
         this.loadDepartments();
       },
-      error: () => this.toast.show('Delete failed. Department might be in use.', 'error')
+      error: (err) => {
+        this.isLoading.set(false);
+        // The backend should return an error if users are still in the department
+        const msg = err.error?.message || 'Delete failed. Department might be in use.';
+        this.toast.show(msg, 'error');
+      }
     });
   }
 }

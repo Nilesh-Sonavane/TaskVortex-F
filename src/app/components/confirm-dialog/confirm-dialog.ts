@@ -13,7 +13,7 @@ import { Component, signal } from '@angular/core';
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <h3>Are you sure?</h3>
-          <p>{{ message() }}</p>
+          <p [innerHTML]="message()"></p>
           <div class="actions">
             <button class="btn-cancel" (click)="onCancel()">Cancel</button>
             

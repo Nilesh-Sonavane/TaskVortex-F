@@ -16,8 +16,24 @@ export class UserService {
     return this.http.get<UserResponse[]>(`${this.API_URL}`);
   }
 
+  getUserById(id: number | string): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.API_URL}/${id}`);
+  }
+
   // Add a new user (the form data we discussed)
   addUser(userData: any): Observable<any> {
     return this.http.post(`${this.API_URL}/add`, userData);
+  }
+
+  updateUser(id: number | string, userData: any): Observable<any> {
+    return this.http.put(`${this.API_URL}/update/${id}`, userData);
+  }
+
+  getUsersByRole(role: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.API_URL}/role/${role}`);
+  }
+
+  toggleStatus(id: number): Observable<any> {
+    return this.http.patch(`${this.API_URL}/toggle-status/${id}`, {});
   }
 }

@@ -93,7 +93,7 @@
 
                         <td class="text-end">
                             @if (project.status !== 'ARCHIVED') {
-                            <a routerLink="/admin-projects/edit/{{project.id}}" class="btn-icon" title="Edit Settings">
+                            <a [routerLink]="['/edit-project', project.id]" class="btn-icon" title="Edit Settings">
                                 <i class="fa-solid fa-gear"></i>
                             </a>
                             <button class="btn-icon" title="Archive" (click)="archiveProject(project.id)">

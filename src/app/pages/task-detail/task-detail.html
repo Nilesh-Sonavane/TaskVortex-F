@@ -193,12 +193,13 @@
                             (ngModelChange)="onStatusChange($event)" [disabled]="!canEdit()">
 
                             <option value="NOT_STARTED">Not Started</option>
-                            <option value="DEPLOYMENT_IN_PROGRESS">Deployment in Progress</option>
-                            <option value="RE_DEPLOYMENT_IN_PROGRESS">Re-Deployment in Progress</option>
-                            <option value="DEPLOYMENT_COMPLETE">Deployment Complete</option>
+                            <option value="DEVELOPMENT_IN_PROGRESS">Development in Progress</option>
+                            <option value="DEVELOPMENT_COMPLETE">Development Complete</option>
+                            <option value="RE_DEVELOPMENT_IN_PROGRESS">Re-Development in Progress</option>
                             <option value="TESTING_IN_PROGRESS">Testing in Progress</option>
-                            <option value="RE_TESTING_IN_PROGRESS">Re-Testing in Progress</option>
                             <option value="TESTING_COMPLETE">Testing Complete</option>
+                            <option value="RE_TESTING_IN_PROGRESS">Re-Testing in Progress</option>
+                            <option value="DEPLOYMENT_COMPLETE">Deployment Complete</option>
                             <option value="IN_UAT">In UAT</option>
                             <option value="HOLD">Hold</option>
                             <option value="CANCELLED">Cancelled</option>

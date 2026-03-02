@@ -204,6 +204,25 @@
       border-color: #dee2e6;
   }
 
+  /* Add these to your CSS file */
+  .bg-development-in-progress {
+      background-color: #e7f1ff;
+      color: #0d6efd;
+      border-color: #cfe2ff;
+  }
+
+  .bg-development-complete {
+      background-color: #f3e5f5;
+      color: #6a1b9a;
+      border-color: #e1bee7;
+  }
+
+  .bg-re-development-in-progress {
+      background-color: #e0f7fa !important;
+      color: #00838f !important;
+      border: 1px solid #b2ebf2;
+  }
+
   .bg-deployment-in-progress {
       background-color: #e7f1ff;
       color: #0d6efd;
@@ -256,4 +275,18 @@
       background-color: #fff5f5;
       color: #c92a2a;
       border-color: #ffc9c9;
+  }
+
+
+  /* Make the entire filter box and the select element clickable with a hand pointer */
+  .manager-filter-box,
+  .manager-filter-box select {
+      cursor: pointer !important;
+  }
+
+  /* Optional: Add a slight background change on hover for better UI */
+  .manager-filter-box:hover {
+      background-color: #f0f4f8 !important;
+      /* Slightly darker than light */
+      transition: background-color 0.2s ease;
   }
