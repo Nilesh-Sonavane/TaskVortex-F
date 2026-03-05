@@ -18,28 +18,36 @@ export class Layout implements OnInit {
   private location = inject(Location); // <--- 2. Inject Location
   public auth = inject(AuthService);
 
-  pageTitle: string = 'Dashboard';
+  pageTitle: string = 'Loading...';
   showBackButton: boolean = false; // <--- 3. Control visibility
-
   ngOnInit() {
+    // Define the title extraction logic as a reusable function
+    const getTitle = () => {
+      let child = this.activatedRoute.firstChild;
+      while (child?.firstChild) {
+        child = child.firstChild;
+      }
+      return child?.snapshot.title || 'TaskVortex';
+    };
+
+    // 1. Set title immediately on component load
+    this.updateTitle(getTitle());
+
+    // 2. Then listen for future navigation changes
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
-        map(() => {
-          let child = this.activatedRoute.firstChild;
-          while (child?.firstChild) {
-            child = child.firstChild;
-          }
-          return child?.snapshot.title || 'TaskVortex';
-        })
+        map(() => getTitle())
       )
       .subscribe((title: string) => {
-        // Update Title
-        this.pageTitle = title.replace(' - TaskVortex', '').replace(' | TaskVortex', '');
-
-        // 4. Logic: Hide Back Button on 'Dashboard' so users don't accidentally leave
-        this.showBackButton = this.pageTitle !== 'Dashboard';
+        this.updateTitle(title);
       });
+  }
+
+  // Helper method to keep code clean
+  private updateTitle(title: string) {
+    this.pageTitle = title.replace(' - TaskVortex', '').replace(' | TaskVortex', '');
+    this.showBackButton = this.pageTitle !== 'Dashboard';
   }
 
   // 5. Back Function

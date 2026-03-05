@@ -320,62 +320,73 @@
 .bg-not-started {
     background-color: #f8f9fa !important;
     color: #495057 !important;
-    border-color: #dee2e6 !important;
+    border: 1px solid #dee2e6;
 }
 
-.bg-deployment-in-progress {
+/* Development Statuses */
+.bg-development-in-progress {
     background-color: #e7f1ff !important;
     color: #0d6efd !important;
-    border-color: #cfe2ff !important;
+    border: 1px solid #cfe2ff;
 }
 
-.bg-re-deployment-in-progress {
+.bg-re-development-in-progress {
     background-color: #e0f7fa !important;
     color: #00838f !important;
-    border-color: #b2ebf2 !important;
+    border: 1px solid #b2ebf2;
 }
 
-.bg-deployment-complete {
+.bg-development-complete {
     background-color: #f3e5f5 !important;
     color: #6a1b9a !important;
-    border-color: #e1bee7 !important;
+    border: 1px solid #e1bee7;
 }
 
+/* Testing Statuses */
 .bg-testing-in-progress {
     background-color: #f3f0ff !important;
     color: #6f42c1 !important;
-    border-color: #dcd3ff !important;
-}
-
-.bg-testing-complete {
-    background-color: #e6fffa !important;
-    color: #00695c !important;
-    border-color: #b2f2bb !important;
+    border: 1px solid #dcd3ff;
 }
 
 .bg-re-testing-in-progress {
     background-color: #fff0f6 !important;
     color: #d63384 !important;
-    border-color: #ffdeeb !important;
+    border: 1px solid #ffdeeb;
+}
+
+.bg-testing-complete {
+    background-color: #e6fffa !important;
+    color: #00695c !important;
+    border: 1px solid #b2f2bb;
+}
+
+/* Lifecycle & Deployment */
+.bg-deployment-complete {
+    background-color: #ebfbee !important;
+    color: #2b8a3e !important;
+    border: 1px solid #c3fae8;
 }
 
 .bg-in-uat {
     background-color: #fff4e6 !important;
     color: #d9480f !important;
-    border-color: #ffd8a8 !important;
+    border: 1px solid #ffd8a8;
 }
 
+/* State Statuses */
 .bg-hold {
     background-color: #fff9db !important;
     color: #856404 !important;
-    border-color: #ffe066 !important;
+    border: 1px solid #ffe066;
 }
 
 .bg-cancelled {
     background-color: #fff5f5 !important;
     color: #c92a2a !important;
-    border-color: #ffc9c9 !important;
+    border: 1px solid #ffc9c9;
 }
+
 
 /* --- Priority Badge Styles --- */
 .badge-custom {
