@@ -152,15 +152,16 @@ export class CreateTaskComponent implements OnInit {
 
   loadInitialData() {
     if (!this.currentUser) return;
-
     this.isLoading = true;
-    // Use the new role-based endpoint from the backend
+
     this.projectService.getAccessibleProjects(this.currentUser.email).subscribe({
       next: (data) => {
         this.managedProjects = data;
 
-        // If creating a new task and only one project is available, auto-select it
-        if (this.managedProjects.length === 1 && !this.isEditMode) {
+        // If we are editing, we wait until projects are loaded before patching the task
+        if (this.isEditMode) {
+          this.loadTaskDataForEdit();
+        } else if (this.managedProjects.length === 1) {
           this.taskForm.get('projectId')?.setValue(this.managedProjects[0].id);
         }
 
@@ -169,33 +170,36 @@ export class CreateTaskComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        this.toast.show('Error loading accessible projects', 'error');
-        console.log(err)
-        this.cdr.markForCheck();
+        this.toast.show('Error loading projects', 'error');
       }
     });
   }
 
   setupProjectListener() {
     this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
-      // Find the project object from our accessible list
       const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
 
-      // Reset assignee search and ID if the project changes (but not during initial edit load)
-      if (!this.isLoading) {
+      // 1. Standard Reset
+      if (!this.isLoading && !this.isEditMode) {
         this.taskForm.get('assigneeId')?.setValue(null);
         this.assigneeSearchTerm = '';
-        this.isDropdownOpen = false;
       }
 
-      // Update the employee list to show ONLY members of this specific project
-      if (selectedProject && selectedProject.members) {
+      if (selectedProject?.members) {
         this.filteredEmployees = [...selectedProject.members];
 
-        // If the user is an employee, they can only assign the task to themselves
-        if (this.currentUser?.role === 'EMPLOYEE') {
-          const self = this.filteredEmployees.find(m => m.id === this.currentUser.id);
-          if (self) this.selectMember(self);
+        // 2. AUTO-SELECT SELF LOGIC
+        // We look for the current user's ID in the project's member list
+        const self = this.filteredEmployees.find(m => m.id === this.currentUser?.id);
+
+        if (self) {
+          // Automatically select the logged-in user if they are a member of the project
+          this.selectMember(self);
+
+          // Optional: If they are an employee, prevent them from changing the assignee
+          if (this.currentUser?.role === 'EMPLOYEE') {
+            this.taskForm.get('assigneeId')?.disable();
+          }
         }
       } else {
         this.filteredEmployees = [];
@@ -204,7 +208,6 @@ export class CreateTaskComponent implements OnInit {
       this.cdr.detectChanges();
     });
   }
-
   get subtasks() { return this.taskForm.get('subtasks') as FormArray; }
 
   addSubtask(input: HTMLInputElement) {
@@ -336,6 +339,7 @@ export class CreateTaskComponent implements OnInit {
 
   selectMember(member: any) {
     this.taskForm.get('assigneeId')?.setValue(member.id);
+    // This updates the text visible in the search input
     this.assigneeSearchTerm = member.name || `${member.firstName} ${member.lastName}`;
     this.isDropdownOpen = false;
     this.cdr.detectChanges();

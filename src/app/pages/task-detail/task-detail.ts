@@ -25,6 +25,7 @@ export class TaskDetail implements OnInit, OnDestroy {
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private routeSub: Subscription | null = null;
+  performerSearch = signal<string>('');
 
   confirmDialog = viewChild<ConfirmDialogComponent>('confirmDialog');
 
@@ -45,11 +46,18 @@ export class TaskDetail implements OnInit, OnDestroy {
   zoomLevel = signal(1);
 
   // --- FILTERED HISTORY LOGIC ---
+  // Add a signal for performer search
+
   filteredHistory = computed(() => {
-    const logs = this.historyList();
+    const allLogs = this.historyList();
+    const currentId = this.task()?.id; // The ID of Task 1
+
+    // STEP 1: Strict ID Filtering
+    let logs = allLogs.filter(log => log.entityId === currentId);
+
+    // STEP 2: Date Filtering (Your existing logic)
     const start = this.startDate();
     const end = this.endDate();
-
     if (!start && !end) return logs;
 
     return logs.filter(log => {
@@ -82,8 +90,10 @@ export class TaskDetail implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.routeSub = this.route.params.subscribe(params => {
-      const id = params['id'];
-      if (id) this.loadTaskDetails(Number(id));
+      const id = params['id']; // This is '1' for Task 1
+      if (id) {
+        this.loadTaskDetails(Number(id)); // Only Task 1 data is requested
+      }
     });
   }
 
@@ -175,9 +185,15 @@ export class TaskDetail implements OnInit, OnDestroy {
   }
 
   loadTaskHistory(id: number) {
+    // Clears any old data from Task 2 if you navigated directly
+    this.historyList.set([]);
+
     this.taskService.getTaskHistory(id).subscribe({
-      next: (logs) => this.historyList.set(logs),
-      error: (err) => console.error('Failed to load history', err)
+      next: (logs) => {
+        // The backend returns: WHERE entity_name = 'TASKS' AND entity_id = 1
+        this.historyList.set(logs);
+      },
+      error: (err) => console.error('History fetch error', err)
     });
   }
 
