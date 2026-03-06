@@ -1,0 +1,515 @@
+  /* --- MAIN CONTENT --- */
+  .main-content {
+      margin-left: var(--sidebar-width);
+      width: calc(100% - var(--sidebar-width));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .top-navbar {
+      height: 70px;
+      background: white;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      position: sticky;
+      top: 0;
+      z-index: 900;
+  }
+
+  .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 8px;
+      transition: 0.2s;
+  }
+
+  .user-profile:hover {
+      background: #f8fafc;
+  }
+
+  .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e2e8f0;
+  }
+
+  .page-content {
+      padding: 30px;
+  }
+
+  /* --- DIRECTORY TOOLBAR --- */
+  .toolbar {
+      background: white;
+      padding: 20px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .search-box {
+      position: relative;
+      width: 300px;
+  }
+
+  .search-box input {
+      padding-left: 40px;
+      border-radius: 8px;
+      border-color: var(--border-color);
+      height: 42px;
+  }
+
+  .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+  }
+
+  .filter-select {
+      min-width: 180px;
+      max-width: 300px;
+      height: 42px;
+      border-radius: 8px;
+      border-color: var(--border-color);
+      border-radius: 8px;
+      padding-right: 35px;
+      text-overflow: ellipsis;
+      background-position: right 12px center;
+      cursor: pointer;
+  }
+
+  .filter-select option {
+      padding: 10px;
+      font-size: 0.9rem;
+  }
+
+  /* --- PROFILE CARD DESIGN --- */
+  .team-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .team-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08);
+      border-color: #cbd5e1;
+  }
+
+  /* Gradient Top */
+  .card-banner {
+      height: 80px;
+      width: 100%;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  }
+
+  .banner-blue {
+      background: linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%);
+  }
+
+  .banner-purple {
+      background: linear-gradient(135deg, #f3e8ff 0%, #d8b4fe 100%);
+  }
+
+  .banner-green {
+      background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+  }
+
+  .card-body {
+      padding: 24px;
+      text-align: center;
+      margin-top: -50px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .profile-pic-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 15px;
+  }
+
+  .profile-pic {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .status-dot {
+      width: 14px;
+      height: 14px;
+      background: #22c55e;
+      border: 2px solid white;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+  }
+
+  .status-offline {
+      background: #94a3b8;
+  }
+
+  .member-name {
+      font-weight: 700;
+      color: #1e293b;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+  }
+
+  .member-role {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 15px;
+  }
+
+  /* Skill Tags */
+  .skills-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 20px;
+  }
+
+  .skill-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
+  }
+
+  /* Action Buttons */
+  .card-actions {
+      margin-top: auto;
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+  }
+
+  .btn-contact {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      transition: 0.2s;
+      background: white;
+      text-decoration: none;
+  }
+
+  .btn-contact:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #eff6ff;
+  }
+
+  @media (max-width: 992px) {
+      .sidebar {
+          transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+          transform: translateX(0);
+      }
+
+      .main-content {
+          margin-left: 0;
+          width: 100%;
+      }
+  }
+
+  .member-meta {
+      font-size: 0.85rem;
+      color: #64748b;
+      /* Muted slate */
+  }
+
+  .member-role {
+      font-weight: 600;
+      color: #334155;
+  }
+
+  .member-dept {
+      font-weight: 400;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+  }
+
+  .meta-divider {
+      width: 4px;
+      height: 4px;
+      background-color: #cbd5e1;
+      border-radius: 50%;
+      flex-shrink: 0;
+      /* Prevents the dot from becoming an oval */
+
+  }
+
+  .member-dept {
+      white-space: nowrap;
+      /* Prevents department name from splitting into 2 lines */
+      font-size: 0.85rem;
+      color: #64748b;
+  }
+
+  .small-icon {
+      font-size: 0.75rem;
+  }
+
+  /* Ensure names don't break the card on your Dell Vostro */
+  .text-truncate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+  }
+
+  /* Container for the new layout */
+  .collaboration-info {
+      padding: 8px 12px;
+      background-color: #f8fafc;
+      /* Very light subtle grey-blue */
+      border-radius: 8px;
+      margin: 0 10px;
+      /* Inset from card edges */
+  }
+
+  /* Project Key Typography */
+  .project-key-text {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #475569;
+      /* Slate grey */
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.2s ease;
+  }
+
+  .project-key-text:hover {
+      color: #0d6efd;
+      /* Primary color on hover */
+      cursor: default;
+  }
+
+  /* Subtle Vertical Divider */
+  .divider {
+      width: 1px;
+      height: 10px;
+      background-color: #cbd5e1;
+      margin: 0 4px;
+      display: inline-block;
+  }
+
+  /* Ensure the extra-small font is consistent */
+  .extra-small {
+      font-size: 0.65rem;
+      color: #94a3b8;
+  }
+
+  /* Stack container for Role and Dept */
+  .member-info-stack {
+      text-align: center;
+      width: 100%;
+  }
+
+  /* Primary Line: Role */
+  .role-line {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #334155;
+      /* Slate 700 */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+
+  /* Secondary Line: Department */
+  .dept-line {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #64748b;
+      /* Slate 500 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+
+  .dept-line .small-icon {
+      font-size: 0.7rem;
+      opacity: 0.7;
+  }
+
+  /* Spacing fix for the collaboration tray below */
+  .collaboration-info {
+      margin-top: 10px;
+  }
+
+
+  /* Dark background overlay */
+
+
+  /* Dark background overlay */
+  .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      /* Deep slate with transparency */
+      backdrop-filter: blur(6px);
+      /* Glass-morphism effect */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      /* Ensure it's above everything else */
+      padding: 20px;
+  }
+
+  /* Modal Content Box */
+  .profile-modal {
+      background: #ffffff;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-header-banner {
+      height: 140px;
+      width: 100%;
+      transition: background 0.3s ease;
+  }
+
+  /* Avatar styling */
+  .modal-avatar {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 6px solid #ffffff;
+      margin-top: -65px;
+      /* Pulls the image halfway up into the banner */
+      object-fit: cover;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      background-color: #f8fafc;
+  }
+
+  .modal-body {
+      padding: 0 32px 32px;
+  }
+
+  .info-grid {
+      text-align: left;
+  }
+
+  .workload-progress-container {
+      width: 100%;
+      height: 8px;
+      background-color: #f1f5f9;
+      /* Light grey track */
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+  }
+
+  .workload-progress-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      /* Smooth growing animation */
+  }
+
+  .extra-small {
+      font-size: 0.7rem;
+  }
+
+  .info-item label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #94a3b8;
+      /* Muted slate */
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+  }
+
+  .info-item .fw-bold {
+      color: #1e293b;
+      /* Dark slate for readability */
+      font-size: 1rem;
+  }
+
+  /* Close Button (X) */
+  .btn-close-modal {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+      z-index: 10;
+  }
+
+  .btn-close-modal:hover {
+      background: rgba(255, 255, 255, 0.5);
+  }
+
+
+  @keyframes modalFadeIn {
+      from {
+          opacity: 0;
+          transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+      }
+  }

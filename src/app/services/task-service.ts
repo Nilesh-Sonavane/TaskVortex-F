@@ -96,4 +96,8 @@ export class TaskService {
   }
 
 
+  getActiveTaskCount(userId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/user/${userId}/count`);
+  }
+
 }

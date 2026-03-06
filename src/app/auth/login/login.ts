@@ -47,9 +47,14 @@ export class LoginComponent {
         this.cdr.detectChanges();
 
         let msg = 'Server error. Please try again.';
-        if (err.status === 401 || err.status === 403) {
+
+        if (err.status === 403) {
+          // This specifically hits when isEnabled() is false in your User entity
+          msg = 'Access Denied: Your account is currently inactive. Please contact your Admin.';
+        } else if (err.status === 401) {
           msg = 'Invalid email or password.';
         }
+
         this.toast.show(msg, 'error');
       }
     });

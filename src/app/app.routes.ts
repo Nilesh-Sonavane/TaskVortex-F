@@ -13,6 +13,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard';
 import { MyTasksComponent } from './pages/my-tasks/my-tasks';
 import { TaskDetail } from './pages/task-detail/task-detail';
 import { TaskListComponent } from './pages/task-list/task-list';
+import { TeamDirectory } from './pages/teem-directory/teem-directory';
 import { Layout } from './shared/layout/layout';
 
 // Import the new Task components here
@@ -55,6 +56,7 @@ export const routes: Routes = [
             { path: 'my-tasks', component: MyTasksComponent, title: 'My Tasks | TaskVortex' },
             // Employees access detail here: /my-tasks/1
             { path: 'my-tasks/:id', component: TaskDetail, title: 'Task Details | TaskVortex' },
+            { path: 'team-directory', component: TeamDirectory, title: 'Team Directory | TaskVortex' },
 
 
 

@@ -1,0 +1,178 @@
+@if (isLoading()) {
+<app-loader></app-loader>
+}
+<div class="page-content">
+    <div class="toolbar animate-in">
+        <div class="d-flex align-items-center gap-2">
+            <h4 class="fw-bold m-0">Team Members</h4>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                {{ filteredUsers().length }} Teammates
+            </span>
+        </div>
+
+        <div class="d-flex gap-3 flex-wrap">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" class="form-control" placeholder="Search by name or email..."
+                    [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+            </div>
+            <select class="form-select filter-select" style="width: 160px;" [ngModel]="selectedProject()"
+                (ngModelChange)="selectedProject.set($event)">
+                <option value="All">All Projects</option>
+                @for (proj of availableProjects(); track proj.key) {
+                <option [value]="proj.key">{{ proj.key }} - {{ proj.name }}</option>
+                }
+            </select>
+            <select class="form-select filter-select" style="width: 150px;" [ngModel]="selectedDept()"
+                (ngModelChange)="selectedDept.set($event)">
+                <option value="All">All Depts</option>
+                @for (dept of departments(); track dept.id) {
+                <option [value]="dept.name">{{ dept.name }}</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="row g-4" id="teamGrid">
+        @for (user of filteredUsers(); track user.id) {
+        <div class="col-md-6 col-xl-3 animate-in">
+            <div class="team-card">
+                <div class="card-banner" [ngClass]="{
+                        'banner-blue': user.role === 'EMPLOYEE',
+                        'banner-purple': user.role === 'MANAGER',
+                        'banner-green': user.role === 'ADMIN'
+                    }"></div>
+
+                <div class="card-body">
+                    <div class="profile-pic-wrapper">
+                        <img [src]="getAvatar(user)" class="profile-pic" [alt]="user.firstName">
+                        <span class="status-dot" [class.status-offline]="!user.active"
+                            [title]="user.active ? 'Active' : 'Inactive'"></span>
+                    </div>
+
+                    <h5 class="member-name text-truncate">{{ user.firstName }} {{ user.lastName }}</h5>
+
+                    <div class="member-info-stack mb-3">
+                        <div class="role-line">
+                            {{ user.jobTitle || user.role | titlecase }}
+                        </div>
+
+                        @if (user.department) {
+                        <div class="dept-line mt-1">
+                            <i class="fa-solid fa-building small-icon me-1"></i>
+                            {{ user.department }}
+                        </div>
+                        }
+                    </div>
+
+                    <div class="collaboration-info mt-3 mb-4">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-diagram-project text-muted opacity-50 small"></i>
+                            <div class="project-list d-flex flex-wrap justify-content-center align-items-center gap-1">
+                                @for (proj of getSharedProjects(user.id); track proj.key) {
+                                <span class="project-key-text" [attr.title]="proj.name">
+                                    {{ proj.key }}
+                                </span>
+                                @if (!$last) {
+                                <span class="divider"></span>
+                                }
+                                } @empty {
+                                <span class="text-muted extra-small fst-italic">Standard Workspace</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a [href]="'mailto:' + user.email" class="btn-contact" title="Email">
+                            <i class="fa-regular fa-envelope"></i>
+                        </a>
+                        <a href="javascript:void(0)" class="btn-contact" title="Profile" (click)="openProfile(user)">
+                            <i class="fa-regular fa-user"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        } @empty {
+        <div class="col-12 text-center py-5">
+            <i class="fa-solid fa-person-circle-question fs-1 text-muted opacity-25 mb-3"></i>
+            <p class="text-muted">No teammates found matching these criteria.</p>
+        </div>
+        }
+    </div>
+
+</div>
+
+@if (selectedUserForModal(); as selected) {
+<div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content profile-modal animate-in" (click)="$event.stopPropagation()">
+        <div class="modal-header-banner" [ngClass]="{
+            'banner-blue': selected.role === 'EMPLOYEE',
+            'banner-purple': selected.role === 'MANAGER',
+            'banner-green': selected.role === 'ADMIN'
+        }">
+            <button class="btn-close-modal" (click)="closeModal()">&times;</button>
+        </div>
+
+        <div class="modal-body text-center">
+            <img [src]="getAvatar(selected)" class="modal-avatar shadow">
+
+            <h3 class="mt-3 fw-bold mb-1">{{ selected.firstName }} {{ selected.lastName }}</h3>
+            <p class="text-primary fw-semibold mb-4">{{ selected.jobTitle || selected.role | titlecase }}</p>
+
+            <div class="info-grid border-top pt-4">
+                <div class="info-item mb-3">
+                    <label class="text-muted small text-uppercase fw-bold">Email Address</label>
+                    <div class="fw-semibold">{{ selected.email }}</div>
+                </div>
+
+                <div class="info-item mb-3">
+                    <label class="text-muted small text-uppercase fw-bold">Department</label>
+                    <div class="fw-semibold">
+                        <i class="fa-solid fa-building me-1 opacity-50"></i>
+                        {{ selected.department || 'Not Assigned' }}
+                    </div>
+                </div>
+                <div class="info-item mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="text-muted small fw-bold text-uppercase m-0">Workload Score</label>
+                        <span class="small fw-bold" [style.color]="getWorkloadColor((activeTaskCount() / 10) * 100)">
+                            {{ activeTaskCount() }} Active Tasks
+                        </span>
+                    </div>
+
+                    <div class="workload-progress-container">
+                        <div class="workload-progress-bar" [style.width.%]="(activeTaskCount() / 10) * 100"
+                            [style.background-color]="getWorkloadColor((activeTaskCount() / 10) * 100)">
+                        </div>
+                    </div>
+
+                    <p class="text-muted extra-small mt-1">
+                        @if (activeTaskCount() >= 8) {
+                        ⚠️ High workload: Consider reassignment.
+                        } @else {
+                        ✅ Healthy capacity for new tasks.
+                        }
+                    </p>
+                </div>
+
+                <div class="info-item">
+                    <label class="text-muted small text-uppercase fw-bold">Availability</label>
+                    <div>
+                        <span class="badge"
+                            [ngClass]="selected.active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                            {{ selected.active ? 'Active Teammate' : 'Currently Offline' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top">
+                <a [href]="'mailto:' + selected.email" class="btn btn-primary w-100 rounded-pill py-2">
+                    <i class="fa-regular fa-envelope me-2"></i>Send Message
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+}

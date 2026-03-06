@@ -27,6 +27,9 @@
             class="nav-link" (click)="closeSidebar()">
             <i class="fa-solid fa-house"></i> Dashboard
         </a>
+        <a routerLink="/team-directory" routerLinkActive="active-link" class="nav-link" (click)="closeSidebar()">
+            <i class="fa-solid fa-users"></i> Team Directory
+        </a>
 
         <a routerLink="/my-tasks" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: false }"
             class="nav-link" (click)="closeSidebar()">
