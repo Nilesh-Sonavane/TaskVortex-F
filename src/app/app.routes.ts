@@ -8,6 +8,7 @@ import { AddUserComponent } from './pages/add-user/add-user';
 import { AdminDepartmentsComponent } from './pages/admin-departments/admin-departments';
 import { AdminProjectComponent } from './pages/admin-project/admin-project';
 import { AdminUsersComponent } from './pages/admin-users/admin-users';
+import { BoardComponent } from './pages/board/board';
 import { CreateTaskComponent } from './pages/create-task/create-task';
 import { DashboardComponent } from './pages/dashboard/dashboard';
 import { MyTasksComponent } from './pages/my-tasks/my-tasks';
@@ -43,6 +44,7 @@ export const routes: Routes = [
             { path: 'admin-projects', component: AdminProjectComponent, title: 'Projects | TaskVortex' },
             { path: 'admin-projects/create', component: AddProjectComponent, title: 'Create Project | TaskVortex' },
             { path: 'edit-project/:id', component: AddProjectComponent, title: 'Edit Project | TaskVortex' },
+            { path: 'board', component: BoardComponent, title: 'Board | TaskVortex' },
 
 
             // --- Manager Routes (Tasks) ---

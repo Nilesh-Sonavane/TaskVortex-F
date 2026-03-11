@@ -1,0 +1,214 @@
+<div class="board-container">
+    <header class="workspace-header">
+        <div class="header-left">
+            <div class="project-indicator">TV</div>
+            <nav class="breadcrumb">
+                <span class="root">Projects</span>
+                <span class="separator">/</span>
+                <span class="current-board">{{ selectedProjectNames() }}</span>
+            </nav>
+        </div>
+
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" class="search-input" placeholder="Filter tasks..." [ngModel]="searchTerm()"
+                    (ngModelChange)="searchTerm.set($event)">
+            </div>
+
+            <div class="group-by-selector">
+                <span class="label">Group by:</span>
+                <select [ngModel]="groupBy()" (ngModelChange)="groupBy.set($event)" class="group-select">
+                    <option value="status">Status</option>
+                    <option value="user">Assignee</option>
+                </select>
+            </div>
+
+
+            <div class="divider"></div>
+
+            <div class="filter-dropdown-container">
+                <button class="filter-action-btn" (click)="toggleFilterMenu()" [class.filtering]="filterCount() > 0"
+                    [class.active]="isFilterOpen()">
+                    <i class="fa-solid fa-filter"></i>
+                    <span class="btn-text">Filters</span>
+                    @if (filterCount() > 0) {
+                    <span class="count-indicator">{{ filterCount() }}</span>
+                    }
+                </button>
+
+                @if (isFilterOpen()) {
+                <div class="filter-popover">
+                    <div class="popover-body">
+                        <div class="side-tabs">
+                            <button (click)="activeTab.set('Project')"
+                                [class.selected]="activeTab() === 'Project'">Project</button>
+                            <button (click)="activeTab.set('Assignee')"
+                                [class.selected]="activeTab() === 'Assignee'">Assignee</button>
+                            <button (click)="activeTab.set('Status')"
+                                [class.selected]="activeTab() === 'Status'">Status</button>
+                            <button (click)="selectTab('Department')"
+                                [class.selected]="activeTab() === 'Department'">Department</button>
+                        </div>
+
+                        <div class="tab-content">
+                            <div class="pane-search">
+                                <i class="fa-solid fa-search"></i>
+                                <input type="text" [placeholder]="'Search ' + activeTab().toLowerCase()"
+                                    [ngModel]="filterSearchQuery()" (ngModelChange)="filterSearchQuery.set($event)">
+                            </div>
+
+                            <div class="pane-list">
+                                @if (activeTab() === 'Project') {
+                                <label class="item-row all-option" (click)="selectedProjectIds.set([])">
+                                    <input type="radio" name="proj-reset" [checked]="selectedProjectIds().length === 0">
+                                    <span>All Projects</span>
+                                </label>
+                                @for (proj of filteredProjects(); track proj.id) {
+                                <label class="item-row">
+                                    <input type="checkbox" [checked]="selectedProjectIds().includes(proj.id)"
+                                        (change)="toggleProjectFilter(proj.id)">
+                                    <span>{{ proj.name }}</span>
+                                </label>
+                                }@empty {
+                                <div class="empty-hint p-3 text-center">No project found</div>
+                                }
+                                }
+
+                                @if (activeTab() === 'Assignee') {
+                                @for (user of filteredUsers(); track user.id) {
+                                <label class="item-row">
+                                    <input type="checkbox" [checked]="selectedAssigneeIds().includes(user.id)"
+                                        (change)="toggleUserFilter(user.id)">
+                                    <div class="avatar-sm">
+                                        {{ user.firstName ? user.firstName[0].toUpperCase() : '?' }}
+                                    </div> <span>{{ user.firstName + " " + user.lastName}}</span>
+                                </label>
+                                }@empty {
+                                <div class="empty-hint p-3 text-center">No users found</div>
+                                }
+                                }
+
+                                @if (activeTab() === 'Status') {
+                                @for (status of filteredStatuses(); track status) {
+                                <label class="item-row">
+                                    <input type="checkbox" [checked]="selectedStatuses().includes(status)"
+                                        (change)="toggleStatusFilter(status)">
+                                    <span>{{ status.replace('_', ' ') | titlecase }}</span>
+                                </label>
+                                }@empty {
+                                <div class="empty-hint p-3 text-center">No status found</div>
+                                }
+                                }
+                                @if (activeTab() === 'Department') {
+                                @for (dept of filteredDepartments(); track dept) {
+                                <label class="item-row">
+                                    <input type="checkbox" [checked]="selectedDepartments().includes(dept.name)"
+                                        (change)="toggleDepartmentFilter(dept.name)">
+                                    <span>{{ dept.name }}</span>
+                                </label>
+                                } @empty {
+                                <div class="empty-hint p-3 text-center">No department match "{{ filterSearchQuery() }}"
+                                </div>
+                                }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    @if (filterCount() > 0) {
+                    <div class="popover-footer">
+                        <button (click)="resetFilters()" class="btn-reset">Clear all</button>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+
+            <!-- <button class="btn-create-task">
+                <i class="fa-solid fa-plus"></i>
+                <span class="btn-text">New Issue</span>
+            </button> -->
+            <div class="export-dropdown-container">
+                <button class="export-trigger-btn" (click)="isExportOpen.set(!isExportOpen())"
+                    [disabled]="tasks().length === 0">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export</span>
+                    <i class="fa-solid fa-chevron-down arrow"></i>
+                </button>
+
+                @if (isExportOpen() && tasks().length > 0) {
+                <div class="export-menu">
+                    <button class="menu-item" (click)="exportData('excel')">
+                        <i class="fa-solid fa-file-excel excel-icon"></i>
+                        <span>Excel (.xlsx)</span>
+                    </button>
+                    <button class="menu-item" (click)="exportData('csv')">
+                        <i class="fa-solid fa-file-csv csv-icon"></i>
+                        <span>CSV (.csv)</span>
+                    </button>
+                    <button class="menu-item" (click)="exportData('pdf')">
+                        <i class="fa-solid fa-file-pdf pdf-icon"></i>
+                        <span>PDF (.pdf)</span>
+                    </button>
+                </div>
+                }
+            </div>
+        </div>
+    </header>
+
+
+    <div class="kanban-canvas-horizontal">
+        @for (col of columnNames(); track col) {
+        <div class="kanban-row">
+            <div class="row-header">
+                <span class="column-title">{{ col.replace('_', ' ') | titlecase }}</span>
+                <span class="count-pill">{{ filteredGroupedTasks()[col].length }}</span>
+            </div>
+
+            <div class="task-list-horizontal">
+                @for (task of filteredGroupedTasks()[col]; track task.id) {
+                <div class="task-card-horizontal">
+                    <div class="priority-stripe" [style.background]="getPriorityColor(task.priority)"></div>
+
+                    <div class="card-body clickable-card" [routerLink]="['/tasks', task.id]">
+                        <span class="task-id">{{ task.projectKey }}-{{ task.id }}</span>
+                        <p class="task-text">{{ task.title | titlecase }}</p>
+
+                        <div class="card-footer">
+                            <div class="footer-top">
+                                <span class="status-badge" [style.background-color]="getStatusColor(task.status)">
+                                    {{ formatStatus(task.status) | titlecase }}
+                                </span>
+                            </div>
+
+                            <div class="footer-bottom">
+                                <span class="dept-tag">{{ task.dept }}</span>
+                                <img [src]="getAvatar(task.assigneeName)" class="user-img" [title]="task.assigneeName">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                @if (filteredGroupedTasks()[col].length === 0) {
+                <div class="empty-row-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>
+                        {{ groupBy() === 'user' ? col + ' has no matching tasks.' : 'No tasks in this stage.' }}
+                    </span>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        @if (columnNames().length === 0) {
+        <div class="no-results-view">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <p>No tasks found matching your filters.</p>
+            <button (click)="resetFilters()" class="btn-clear-filters">Clear all filters</button>
+        </div>
+        }
+    </div>
+
+</div>

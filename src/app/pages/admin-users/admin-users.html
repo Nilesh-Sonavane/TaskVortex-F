@@ -16,7 +16,6 @@
                 <select class="form-select" style="width: 140px;" [ngModel]="selectedRole()"
                     (ngModelChange)="selectedRole.set($event); onFilterChange()">
                     <option>All Roles</option>
-                    <option>Admin</option>
                     <option>Manager</option>
                     <option>Employee</option>
                 </select>
@@ -58,6 +57,7 @@
                     }
 
                     @for (user of paginatedUsers(); track user.id) {
+                    @if (user.role !="ADMIN") {
                     <tr>
                         <td>
                             <div class="user-info">
@@ -95,6 +95,7 @@
                             </button>
                         </td>
                     </tr>
+                    }
                     } @empty {
                     <tr>
                         <td colspan="5" class="text-center py-5 text-muted">No users found.</td>

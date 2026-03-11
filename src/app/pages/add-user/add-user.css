@@ -77,9 +77,11 @@
 /* --- Role Grid (The Cards) --- */
 .role-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
+    /* justify-content: space-between !important; */
     margin-bottom: 25px;
+    /* border: 1px solid red; */
 }
 
 .role-radio {
