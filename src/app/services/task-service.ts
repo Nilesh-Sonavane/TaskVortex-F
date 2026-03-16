@@ -100,4 +100,7 @@ export class TaskService {
     return this.http.get<number>(`${this.apiUrl}/user/${userId}/count`);
   }
 
+  getGlobalActivity(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/activity/global`);
+  }
 }

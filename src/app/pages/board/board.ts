@@ -51,7 +51,7 @@ export class BoardComponent implements OnInit {
   selectedAssigneeIds = signal<number[]>([]);
   selectedStatuses = signal<string[]>([]);
   selectedDepartments = signal<string[]>([]);
-  groupBy = signal<'status' | 'user'>('status');
+  groupBy = signal<'status' | 'user' | 'project'>('status');
 
   searchTerm = signal<string>('');
   filterSearchQuery = signal<string>('');
@@ -127,6 +127,7 @@ export class BoardComponent implements OnInit {
 
   // Kanban Grouping with Record type to solve indexing error
   // --- UPDATED GROUPING LOGIC ---
+  // --- UPDATED GROUPING LOGIC ---
   filteredGroupedTasks = computed((): Record<string, any[]> => {
     const allTasks = this.tasks();
     const grouped: Record<string, any[]> = {};
@@ -135,7 +136,7 @@ export class BoardComponent implements OnInit {
       this.availableStatuses.forEach(status => {
         grouped[status] = allTasks.filter(t => t.status === status);
       });
-    } else {
+    } else if (this.groupBy() === 'user') {
       // Group by Assignee Name
       this.allUsers().forEach(user => {
         const fullName = `${user.firstName} ${user.lastName}`;
@@ -144,13 +145,23 @@ export class BoardComponent implements OnInit {
       // Catch unassigned tasks
       const unassigned = allTasks.filter(t => !t.assigneeName);
       if (unassigned.length > 0) grouped['Unassigned'] = unassigned;
+    } else if (this.groupBy() === 'project') {
+      // Group by Project Name
+      this.allProjects().forEach(project => {
+        // Checking by projectId or projectKey depending on what your task object uses
+        grouped[project.name] = allTasks.filter(t => t.projectId === project.id || t.projectKey === project.key || t.projectName === project.name);
+      });
+      // Catch tasks without a project (just in case)
+      const noProject = allTasks.filter(t => !t.projectId && !t.projectKey && !t.projectName);
+      if (noProject.length > 0) grouped['No Project'] = noProject;
     }
+
     return grouped;
   });
   columnNames = computed(() => {
     const grouped = this.filteredGroupedTasks();
     const selectedStatusFilters = this.selectedStatuses();
-    const selectedUserFilters = this.selectedAssigneeIds(); // Checkboxes from Assignee filter
+    const selectedUserFilters = this.selectedAssigneeIds();
 
     const isFilteringSearchOrOther =
       this.searchTerm().trim() !== '' ||
@@ -167,21 +178,31 @@ export class BoardComponent implements OnInit {
 
     // --- CASE 2: GROUP BY ASSIGNEE (USER) ---
     if (this.groupBy() === 'user') {
-      // If user explicitly checked specific employees in the filter
       if (selectedUserFilters.length > 0) {
         return this.allUsers()
           .filter(user => selectedUserFilters.includes(user.id))
           .map(user => `${user.firstName} ${user.lastName}`);
       }
-
-      // If searching or filtering by project/dept, hide empty user rows
       if (isFilteringSearchOrOther || selectedStatusFilters.length > 0) {
         return Object.keys(grouped).filter(key => grouped[key].length > 0);
       }
     }
 
+    // --- CASE 3: GROUP BY PROJECT ---
+    if (this.groupBy() === 'project') {
+      // If user explicitly checked specific projects in the filter
+      if (this.selectedProjectIds().length > 0) {
+        return this.allProjects()
+          .filter(project => this.selectedProjectIds().includes(project.id))
+          .map(project => project.name);
+      }
+      // If searching or filtering by something else, hide empty project rows
+      if (isFilteringSearchOrOther || selectedStatusFilters.length > 0 || selectedUserFilters.length > 0) {
+        return Object.keys(grouped).filter(key => grouped[key].length > 0);
+      }
+    }
+
     // --- DEFAULT (No Filters) ---
-    // Only show rows (Status or User) that actually have tasks
     return Object.keys(grouped).filter(key => grouped[key].length > 0);
   });
 
