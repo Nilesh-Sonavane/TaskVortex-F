@@ -45,6 +45,9 @@
         <a routerLink="/tasks/new" routerLinkActive="active-link" class="nav-link" (click)="closeSidebar()">
             <i class="fa-solid fa-circle-plus"></i> Create New Task
         </a>
+        <a routerLink="/profile" routerLinkActive="active-link" class="nav-link" (click)="closeSidebar()">
+            <i class="fa-solid fa-circle-user"></i> My Profile
+        </a>
 
         @if (auth.isManager()) {
         <p class="menu-label mt-3">Team Operations</p>

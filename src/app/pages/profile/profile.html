@@ -1,0 +1,115 @@
+<div class="profile-viewport">
+    <div class="profile-container animate-fade-in">
+
+        <header class="identity-banner">
+            <div class="banner-gradient"></div>
+            <div class="identity-content">
+                <div class="avatar-stack">
+                    <div class="main-avatar">
+                        <img [src]="getAvatar()" alt="Avatar">
+                    </div>
+                    <button class="avatar-edit-trigger" (click)="editAvatar()">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                </div>
+                <div class="identity-text">
+                    <div class="role-tag">{{ user().role }}</div>
+                    <h1>{{ user().firstName }} {{ user().lastName |titlecase}}</h1>
+                    <p><i class="fa-solid fa-location-dot"></i> {{ user().location |titlecase}}</p>
+                </div>
+                <div class="identity-actions ms-auto">
+                    <button class="btn-glass" [class.active]="isEditing()" (click)="toggleEdit()">
+                        <i class="fa-solid" [ngClass]="isEditing() ? 'fa-check' : 'fa-pen-to-square'"></i>
+                        {{ isEditing() ? 'Done' : 'Edit' }}
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-layout">
+            <main class="info-section">
+                <div class="premium-card">
+                    <div class="card-title">General Information</div>
+                    <div class="grid-form">
+                        <div class="input-wrap">
+                            <label>First Name</label>
+                            <input type="text" [(ngModel)]="editData.firstName" [disabled]="!isEditing()">
+                        </div>
+                        <div class="input-wrap">
+                            <label>Last Name</label>
+                            <input type="text" [(ngModel)]="editData.lastName" [disabled]="!isEditing()">
+                        </div>
+
+                        <div class="input-wrap">
+                            <label>Location</label>
+                            <input type="text" style="text-transform: capitalize;" [(ngModel)]="editData.location"
+                                [disabled]="!isEditing()" placeholder="City, Country">
+                        </div>
+
+                        <div class="input-wrap">
+                            <label>Phone Number</label>
+                            <input type="text" [(ngModel)]="editData.phone" [disabled]="!isEditing()"
+                                placeholder="+00 0000 0000">
+                        </div>
+
+                        <div class="input-wrap full">
+                            <label>Email Address</label>
+                            <div class="readonly-field">{{ user().email }}</div>
+                        </div>
+
+                        <div class="input-wrap full">
+                            <label>About Me</label>
+                            <textarea rows="4" [(ngModel)]="editData.bio" [disabled]="!isEditing()"></textarea>
+                        </div>
+                    </div>
+
+                    @if (isEditing()) {
+                    <button class="btn-save" (click)="saveProfile()" [disabled]="isLoading()">
+                        {{ isLoading() ? 'Syncing...' : 'Save Profile Changes' }}
+                    </button>
+                    }
+                </div>
+            </main>
+
+            <aside class="side-section">
+                <div class="premium-card security-theme">
+                    <div class="card-title">Privacy & Security</div>
+
+                    <div class="input-wrap mb-3">
+                        <label>Current Password</label>
+                        <input type="password" [(ngModel)]="passwordData.current" placeholder="••••••••">
+                    </div>
+
+                    <div class="input-wrap mb-3">
+                        <label>New Password</label>
+                        <input type="password" [(ngModel)]="passwordData.new" placeholder="••••••••">
+                    </div>
+
+                    <div class="input-wrap">
+                        <label>Confirm New</label>
+                        <input type="password" [(ngModel)]="passwordData.confirm" placeholder="••••••••">
+                    </div>
+
+                    <button class="btn-security" (click)="changePassword()">Update Password</button>
+                </div>
+
+                <div class="metadata-card">
+                    <div class="meta-row">
+                        <span>Status</span>
+                        <span class="active-dot">{{user().active?'Active':'Inactive'}}</span>
+                    </div>
+                    <div class="meta-row">
+                        <span>Employee ID</span>
+                        <strong>EMP-{{ user().id }}</strong>
+                    </div>
+                    <div class="meta-row">
+                        <span>Department</span>
+                        <strong>{{ user().department }}</strong>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <input type="file" id="avatarUpload" style="display: none" accept="image/*" (change)="onFileSelected($event)">
+</div>

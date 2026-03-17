@@ -36,4 +36,35 @@ export class UserService {
   toggleStatus(id: number): Observable<any> {
     return this.http.patch(`${this.API_URL}/toggle-status/${id}`, {});
   }
+
+  // --- NEW: PERSONAL PROFILE METHODS ---
+
+  /**
+   * Updates the logged-in user's personal profile data (Name, Bio, Phone, Location)
+   */
+  updateMyProfile(profileData: any): Observable<any> {
+    return this.http.put(`${this.API_URL}/profile`, profileData);
+  }
+
+  /**
+   * Uploads the avatar image file and returns the new image URL
+   */
+  uploadProfileImage(file: File): Observable<{ profileUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<{ profileUrl: string }>(`${this.API_URL}/profile/image`, formData);
+  }
+
+  // Fetch the dynamic profile for the logged-in user
+  getMyProfile(): Observable<UserResponse> {
+    return this.http.get<UserResponse>(`${this.API_URL}/me`);
+  }
+
+  /**
+   * Updates the logged-in user's password
+   */
+  changePassword(passwordData: { currentPassword: string, newPassword: string }): Observable<any> {
+    return this.http.put(`${this.API_URL}/profile/password`, passwordData);
+  }
 }

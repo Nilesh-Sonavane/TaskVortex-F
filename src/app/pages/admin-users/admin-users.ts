@@ -148,7 +148,14 @@ export class AdminUsersComponent implements OnInit {
     this.currentPage.set(1);
   }
 
-  getAvatar(firstName: string, role: string) {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=random&color=fff&size=32`;
+
+  getAvatar(user: any): string {
+    const currentUrl = user.profileUrl;
+    if (currentUrl) {
+      return currentUrl.startsWith('http') ? currentUrl : `http://localhost:8080${currentUrl}`;
+    }
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown';
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
   }
 }

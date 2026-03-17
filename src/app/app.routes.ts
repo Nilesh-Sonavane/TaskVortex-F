@@ -12,6 +12,7 @@ import { BoardComponent } from './pages/board/board';
 import { CreateTaskComponent } from './pages/create-task/create-task';
 import { DashboardComponent } from './pages/dashboard/dashboard';
 import { MyTasksComponent } from './pages/my-tasks/my-tasks';
+import { Profile } from './pages/profile/profile';
 import { TaskDetail } from './pages/task-detail/task-detail';
 import { TaskListComponent } from './pages/task-list/task-list';
 import { TeamDirectory } from './pages/teem-directory/teem-directory';
@@ -45,6 +46,7 @@ export const routes: Routes = [
             { path: 'admin-projects/create', component: AddProjectComponent, title: 'Create Project | TaskVortex' },
             { path: 'edit-project/:id', component: AddProjectComponent, title: 'Edit Project | TaskVortex' },
             { path: 'board', component: BoardComponent, title: 'Board | TaskVortex' },
+            { path: 'profile', component: Profile, title: 'Profile | TaskVortex' },
 
 
             // --- Manager Routes (Tasks) ---

@@ -75,19 +75,15 @@ export class AddProjectComponent implements OnInit {
     if (!this.projectId) return;
     this.projectService.getProjectById(this.projectId).subscribe({
       next: (project: any) => {
-        // Console log for final confirmation
-        console.log('Backend Data:', project);
 
         // --- MAPPING BASED ON YOUR LOG ---
         this.projectData = {
           name: project.name || '',
 
-          // Fix: Use projectKey from your log
           key: project.projectKey || '',
 
           description: project.description || '',
 
-          // Fix: Use managerId directly as it is already a number in your log
           managerId: project.managerId ? Number(project.managerId) : null,
 
           startDate: project.startDate || '',
@@ -147,8 +143,16 @@ export class AddProjectComponent implements OnInit {
     }
   }
 
-  getAvatar = (user: any) => `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`;
 
+  getAvatar(user: any): string {
+    const currentUrl = user.profileUrl;
+    if (currentUrl) {
+      return currentUrl.startsWith('http') ? currentUrl : `http://localhost:8080${currentUrl}`;
+    }
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown';
+
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+  }
   onSubmit() {
     this.isLoading = true;
     const payload = {

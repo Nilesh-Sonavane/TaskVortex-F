@@ -42,19 +42,21 @@
                         </li>
 
                         <li><a class="dropdown-item" (click)="setStatus('NOT_STARTED')">Not Started</a></li>
-                        <li><a class="dropdown-item" (click)="setStatus('DEPLOYMENT_IN_PROGRESS')">Deployment in
+                        <li><a class="dropdown-item" (click)="setStatus('DEVELOPMENT_IN_PROGRESS')">Development in
                                 Progress</a></li>
-                        <li><a class="dropdown-item" (click)="setStatus('RE_DEPLOYMENT_IN_PROGRESS')">Re-Deployment</a>
+                        <li><a class="dropdown-item" (click)="setStatus('DEVELOPMENT_COMPLETE')">Development
+                                Complete</a></li>
+                        <li><a class="dropdown-item" (click)="setStatus('RE_DEPLOYMENT_IN_PROGRESS')">Re-Deployment in
+                                Progress</a>
                         </li>
-                        <li><a class="dropdown-item" (click)="setStatus('DEPLOYMENT_COMPLETE')">Deployment Complete</a>
-                        </li>
-
                         <li><a class="dropdown-item" (click)="setStatus('TESTING_IN_PROGRESS')">Testing in Progress</a>
                         </li>
-                        <li><a class="dropdown-item" (click)="setStatus('RE_TESTING_IN_PROGRESS')">Re-Testing</a></li>
                         <li><a class="dropdown-item" (click)="setStatus('TESTING_COMPLETE')">Testing Complete</a></li>
+                        <li><a class="dropdown-item" (click)="setStatus('RE_TESTING_IN_PROGRESS')">Re-Testing in
+                                Progress</a></li>
+                        <li><a class="dropdown-item" (click)="setStatus('DEPLOYMENT_COMPLETE')">Deployment Complete</a>
+                        </li>
                         <li><a class="dropdown-item" (click)="setStatus('IN_UAT')">In UAT</a></li>
-
                         <li><a class="dropdown-item" (click)="setStatus('HOLD')">On Hold</a></li>
                         <li><a class="dropdown-item" (click)="setStatus('CANCELLED')">Cancelled</a></li>
                     </ul>

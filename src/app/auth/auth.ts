@@ -64,6 +64,22 @@ export class AuthService {
     localStorage.setItem('user_details', JSON.stringify(user));
   }
 
+  // --- 4. NEW: DYNAMICALLY UPDATE USER STATE ---
+  updateCurrentUser(partialUserData: any) {
+    const currentData = this.userSignal();
+
+    if (currentData) {
+      // Merge the old data with the newly updated fields
+      const updatedUser = { ...currentData, ...partialUserData };
+
+      // Update the Signal (This instantly triggers the Navbar to redraw!)
+      this.userSignal.set(updatedUser);
+
+      // Overwrite the old snapshot in Local Storage
+      localStorage.setItem('user_details', JSON.stringify(updatedUser));
+    }
+  }
+
   logout() {
     this.currentUserRole.set('');
     this.token.set('');

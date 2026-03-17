@@ -121,9 +121,20 @@
             <p class="text-primary fw-semibold mb-4">{{ selected.jobTitle || selected.role | titlecase }}</p>
 
             <div class="info-grid border-top pt-4">
-                <div class="info-item mb-3">
-                    <label class="text-muted small text-uppercase fw-bold">Email Address</label>
-                    <div class="fw-semibold">{{ selected.email }}</div>
+                <div class="d-flex justify-content-between gap-3 mb-3">
+                    <div class="info-item flex-fill overflow-hidden">
+                        <label class="text-muted small text-uppercase fw-bold">Email Address</label>
+                        <div class="fw-semibold text-truncate" [title]="selected.email">
+                            {{ selected.email }}
+                        </div>
+                    </div>
+
+                    <div class="info-item flex-fill overflow-hidden text-end">
+                        <label class="text-muted small text-uppercase fw-bold">Phone No</label>
+                        <div class="fw-semibold text-truncate" [title]="selected.phone">
+                            {{ selected.phone || 'Not Provided' }}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="info-item mb-3">
@@ -133,6 +144,14 @@
                         {{ selected.department || 'Not Assigned' }}
                     </div>
                 </div>
+                @if (selected.bio) {
+                <div class="info-item mb-3" style="grid-column: 1 / -1; width: 100%;">
+                    <label class="text-muted small text-uppercase fw-bold">About Me</label>
+                    <div class="fw-medium small mt-1 text-secondary" style="line-height: 1.5; font-style: italic;">
+                        "{{ selected.bio }}"
+                    </div>
+                </div>
+                }
                 <div class="info-item mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="text-muted small fw-bold text-uppercase m-0">Workload Score</label>
