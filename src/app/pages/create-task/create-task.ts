@@ -69,7 +69,9 @@ export class CreateTaskComponent implements OnInit {
       priority: ['MEDIUM', Validators.required],
       projectId: [null, Validators.required],
       status: ['NOT_STARTED'],
-      subtasks: this.fb.array([])
+      subtasks: this.fb.array([]),
+      taskPoints: [null, [Validators.min(0)]],
+      workingHours: [null, [Validators.min(0)]]
     });
   }
 
@@ -84,24 +86,133 @@ export class CreateTaskComponent implements OnInit {
 
     this.loadInitialData();
     this.setupProjectListener();
+  }
 
-    if (this.isEditMode) {
-      this.loadTaskDataForEdit();
+  setupProjectListener() {
+    this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
+      const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
+
+      if (selectedProject?.members) {
+        this.filteredEmployees = [...selectedProject.members];
+
+        // Open System Logic: Employees cannot change assignees to OTHERS, so we disable.
+        // Managers/Admins can search and change anyone.
+        if (this.currentUser?.role === 'EMPLOYEE') {
+          this.taskForm.get('assigneeId')?.disable();
+        } else {
+          this.taskForm.get('assigneeId')?.enable();
+        }
+      } else {
+        this.filteredEmployees = [];
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  assignToMe() {
+    if (!this.currentUser) return;
+    const control = this.taskForm.get('assigneeId');
+
+    // Temporarily enable to update value and status
+    control?.enable();
+    control?.setValue(this.currentUser.id);
+    control?.updateValueAndValidity();
+    control?.markAsDirty();
+
+    // Re-disable for Employees to keep the UI locked
+    if (this.currentUser.role === 'EMPLOYEE') {
+      control?.disable();
     }
+
+    this.assigneeSearchTerm = this.currentUser.name ||
+      `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+
+    this.toast.show('Task assigned to you', 'success');
+    this.cdr.detectChanges();
   }
 
-  futureDateValidator(control: any) {
-    if (!control.value) return null;
-    const selectedDate = new Date(control.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate < today ? { pastDate: true } : null;
+  canClaimTask(): boolean {
+    const currentAssigneeId = this.taskForm.get('assigneeId')?.value;
+    return this.currentUser?.role === 'EMPLOYEE' && currentAssigneeId !== this.currentUser?.id;
   }
 
-  getCleanFileName(fileName: string): string {
-    if (!fileName) return '';
-    const index = fileName.indexOf('_');
-    return index !== -1 ? fileName.substring(index + 1) : fileName;
+  onSubmit() {
+    if (this.taskForm.invalid) {
+      this.taskForm.markAllAsTouched();
+      this.toast.show('Please fill all required fields', 'error');
+      return;
+    }
+
+    this.isLoading = true;
+    const formData = new FormData();
+
+    // Crucial: Includes disabled fields (like assigneeId for Employees)
+    const formValue = this.taskForm.getRawValue();
+
+    // Build payload: Keep assigneeId flat as expected by standard DTOs
+    const taskData = {
+      ...formValue,
+      id: this.taskId ? Number(this.taskId) : null,
+      project: { id: formValue.projectId }
+      // Removed the custom 'assignee' object mapping; relying on flat 'assigneeId' from ...formValue
+    };
+
+    // Clean up redundant flat IDs (Only projectId, do NOT delete assigneeId here)
+    delete (taskData as any).projectId;
+
+    if (taskData.subtasks && Array.isArray(taskData.subtasks)) {
+      taskData.subtasks = taskData.subtasks.map((sub: any) => {
+        const { project, assigneeName, assigneeEmail, ...cleanSub } = sub;
+        return {
+          ...cleanSub,
+          project: null,
+          status: sub.isCompleted ? 'TESTING_COMPLETE' : 'NOT_STARTED'
+        };
+      });
+    }
+
+    formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
+    formData.append('userEmail', this.currentUser?.email || 'unknown@taskvortex.com');
+
+    if (this.selectedFiles.length > 0) {
+      this.selectedFiles.forEach(file => formData.append('files', file));
+    }
+
+    const request = this.isEditMode
+      ? this.taskService.updateTask(Number(this.taskId), formData)
+      : this.taskService.createTask(formData);
+
+    request.subscribe({
+      next: () => {
+        this.toast.show('Task saved successfully', 'success');
+        this.router.navigate([this.getCancelRoute()]);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toast.show(err.error?.message || 'Error saving task.', 'error');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // --- UI Helpers & Data Loading ---
+
+  loadInitialData() {
+    if (!this.currentUser) return;
+    this.isLoading = true;
+    this.projectService.getAccessibleProjects(this.currentUser.email).subscribe({
+      next: (data) => {
+        this.managedProjects = data;
+        if (this.isEditMode) {
+          this.loadTaskDataForEdit();
+        } else if (this.managedProjects.length === 1) {
+          this.taskForm.get('projectId')?.setValue(this.managedProjects[0].id);
+        }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => { this.isLoading = false; this.toast.show('Error loading projects', 'error'); }
+    });
   }
 
   loadTaskDataForEdit() {
@@ -120,7 +231,10 @@ export class CreateTaskComponent implements OnInit {
             dueDate: task.dueDate,
             priority: task.priority,
             assigneeId: task.assigneeId,
-            status: task.status
+            status: task.status,
+            taskPoints: task.taskPoints,
+            workingHours: task.workingHours
+
           });
 
           this.subtasks.clear();
@@ -142,246 +256,82 @@ export class CreateTaskComponent implements OnInit {
           this.cdr.markForCheck();
         }, 0);
       },
-      error: () => {
-        this.isLoading = false;
-        this.toast.show('Failed to load task details', 'error');
-        this.cdr.markForCheck();
-      }
+      error: () => { this.isLoading = false; this.toast.show('Failed to load task', 'error'); }
     });
   }
 
-  loadInitialData() {
-    if (!this.currentUser) return;
-    this.isLoading = true;
-
-    this.projectService.getAccessibleProjects(this.currentUser.email).subscribe({
-      next: (data) => {
-        this.managedProjects = data;
-
-        // If we are editing, we wait until projects are loaded before patching the task
-        if (this.isEditMode) {
-          this.loadTaskDataForEdit();
-        } else if (this.managedProjects.length === 1) {
-          this.taskForm.get('projectId')?.setValue(this.managedProjects[0].id);
-        }
-
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.toast.show('Error loading projects', 'error');
-      }
-    });
+  getSelectedProjectName(): string {
+    const projectId = this.taskForm.get('projectId')?.value;
+    const project = this.managedProjects.find(p => p.id == projectId);
+    return project ? `${project.name} (${project.projectKey})` : 'Loading Project...';
   }
 
-  setupProjectListener() {
-    this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
-      const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
-
-      // 1. Standard Reset
-      if (!this.isLoading && !this.isEditMode) {
-        this.taskForm.get('assigneeId')?.setValue(null);
-        this.assigneeSearchTerm = '';
-      }
-
-      if (selectedProject?.members) {
-        this.filteredEmployees = [...selectedProject.members];
-
-        // 2. AUTO-SELECT SELF LOGIC
-        // We look for the current user's ID in the project's member list
-        const self = this.filteredEmployees.find(m => m.id === this.currentUser?.id);
-
-        if (self) {
-          // Automatically select the logged-in user if they are a member of the project
-          this.selectMember(self);
-
-          // Optional: If they are an employee, prevent them from changing the assignee
-          if (this.currentUser?.role === 'EMPLOYEE') {
-            this.taskForm.get('assigneeId')?.disable();
-          }
-        }
-      } else {
-        this.filteredEmployees = [];
-      }
-
-      this.cdr.detectChanges();
-    });
+  futureDateValidator(control: any) {
+    if (!control.value) return null;
+    const selectedDate = new Date(control.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate < today ? { pastDate: true } : null;
   }
+
+  getCleanFileName = (fn: string) => fn?.includes('_') ? fn.split('_').slice(1).join('_') : fn;
   get subtasks() { return this.taskForm.get('subtasks') as FormArray; }
 
   addSubtask(input: HTMLInputElement) {
-    if (this.isSubtask) {
-      this.toast.show('A subtask cannot have its own subtasks.', 'error');
-      input.value = '';
-      return;
-    }
-
+    if (this.isSubtask) { this.toast.show('No nested subtasks allowed.', 'error'); return; }
     if (input.value.trim()) {
-      this.subtasks.push(this.fb.control({
-        title: input.value,
-        isCompleted: false
-      }));
+      this.subtasks.push(this.fb.control({ title: input.value, isCompleted: false }));
       input.value = '';
     }
   }
 
-  removeSubtask(index: number) {
-    const subtaskTitle = this.subtasks.at(index).value.title;
-    this.confirmDialog().open(
-      `Remove subtask: "${subtaskTitle}"?`,
-      'Remove',
-      () => {
-        this.subtasks.removeAt(index);
-        this.cdr.detectChanges();
-      }
-    );
-  }
+  removeSubtask(index: number) { this.subtasks.removeAt(index); }
 
   onFileSelected(event: any) {
     if (event.target.files) {
-      const MAX_SIZE_MB = 10;
-      const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-      for (let file of event.target.files) {
-        if (file.size > MAX_SIZE_BYTES) {
-          this.toast.show(`File "${file.name}" exceeds the 10MB limit.`, 'error');
-          continue;
-        }
-        this.selectedFiles.push(file);
-      }
+      for (let file of event.target.files) { this.selectedFiles.push(file); }
       event.target.value = '';
     }
   }
 
   removeFile(index: number) { this.selectedFiles.splice(index, 1); }
 
-  viewFile(fileName: string) {
-    window.open(`http://localhost:8080/api/tasks/attachments/${fileName}`, '_blank');
-  }
+  viewFile(fileName: string) { window.open(`http://localhost:8080/api/tasks/attachments/${fileName}`, '_blank'); }
 
   deleteExistingAttachment(fileName: string) {
-    const cleanName = this.getCleanFileName(fileName);
-    const email = this.currentUser?.email || 'unknown@taskvortex.com';
-
-    this.confirmDialog().open(
-      `Permanently delete "${cleanName}"?`,
-      'Delete File',
-      () => {
-        this.taskService.deleteAttachment(Number(this.taskId), fileName, email).subscribe({
-          next: () => {
-            this.existingAttachments = this.existingAttachments.filter(f => f !== fileName);
-            this.toast.show('File deleted successfully', 'success');
-            this.cdr.detectChanges();
-          },
-          error: () => this.toast.show('Error deleting file.', 'error')
-        });
-      }
-    );
-  }
-
-  onSubmit() {
-    if (this.taskForm.invalid) {
-      this.taskForm.markAllAsTouched();
-      this.toast.show('Please fill all required fields', 'error');
-      return;
-    }
-
-    this.isLoading = true;
-    const formData = new FormData();
-    const formValue = this.taskForm.value;
-
-    const taskData = {
-      ...formValue,
-      id: this.taskId ? Number(this.taskId) : null,
-      project: { id: formValue.projectId }
-    };
-
-    if (taskData.subtasks && Array.isArray(taskData.subtasks)) {
-      taskData.subtasks = taskData.subtasks.map((sub: any) => {
-        const { project, assigneeName, assigneeEmail, ...cleanSub } = sub;
-        return {
-          ...cleanSub,
-          project: null,
-          status: sub.isCompleted ? 'TESTING_COMPLETE' : 'NOT_STARTED'
-        };
-      });
-    }
-
-    delete (taskData as any).projectId;
-
-    formData.append('task', new Blob([JSON.stringify(taskData)], { type: 'application/json' }));
-    formData.append('userEmail', this.currentUser?.email || 'unknown@taskvortex.com');
-
-    if (this.selectedFiles.length > 0) {
-      this.selectedFiles.forEach(file => formData.append('files', file));
-    }
-
-    const request = this.isEditMode
-      ? this.taskService.updateTask(Number(this.taskId), formData)
-      : this.taskService.createTask(formData);
-
-    request.subscribe({
-      next: () => {
-        this.toast.show('Task saved successfully', 'success');
-        if (this.currentUser?.role === 'EMPLOYEE') {
-          this.router.navigate(['/my-tasks']);
-        } else {
-          this.router.navigate(['/tasks']);
-        }
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.toast.show(err.error?.message || 'Error saving task.', 'error');
-        this.cdr.markForCheck();
-      }
+    this.taskService.deleteAttachment(Number(this.taskId), fileName, this.currentUser.email).subscribe({
+      next: () => { this.existingAttachments = this.existingAttachments.filter(f => f !== fileName); this.toast.show('Deleted', 'success'); }
     });
   }
 
   selectMember(member: any) {
     this.taskForm.get('assigneeId')?.setValue(member.id);
-    // This updates the text visible in the search input
     this.assigneeSearchTerm = member.name || `${member.firstName} ${member.lastName}`;
     this.isDropdownOpen = false;
-    this.cdr.detectChanges();
   }
 
-  toggleDropdown(state: boolean) {
-    setTimeout(() => {
-      this.isDropdownOpen = state;
-      this.cdr.detectChanges();
-    }, 200);
-  }
+  toggleDropdown(state: boolean) { setTimeout(() => { this.isDropdownOpen = state; this.cdr.detectChanges(); }, 200); }
 
-  getCancelRoute(): string {
-    return this.currentUser?.role === 'EMPLOYEE' ? '/my-tasks' : '/tasks';
-  }
+  getCancelRoute = () => this.currentUser?.role === 'EMPLOYEE' ? '/my-tasks' : '/tasks';
 
-  get selectedAssignee() {
-    return this.filteredEmployees.find(e => e.id == this.taskForm.get('assigneeId')?.value);
-  }
+  get selectedAssignee() { return this.filteredEmployees.find(e => e.id == this.taskForm.get('assigneeId')?.value); }
 
-  /**
-   * UPDATED: Added logic to search by both Name and Email.
-   */
   get searchedEmployees() {
     const term = this.assigneeSearchTerm.toLowerCase().trim();
     if (!term) return this.filteredEmployees;
+    return this.filteredEmployees.filter(e => (e.name || `${e.firstName} ${e.lastName}`).toLowerCase().includes(term) || e.email.toLowerCase().includes(term));
+  }
+  //Check if the current date value is in the past ---
+  isOverdue(): boolean {
+    const dateValue = this.taskForm.get('dueDate')?.value;
+    if (!dateValue) return false;
 
-    return this.filteredEmployees.filter(e => {
-      const fullName = (e.name || `${e.firstName} ${e.lastName}`).toLowerCase();
-      const email = (e.email || '').toLowerCase();
-      // Returns true if either name or email includes the search term
-      return fullName.includes(term) || email.includes(term);
-    });
+    const selectedDate = new Date(dateValue);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight
+
+    return selectedDate < today;
   }
 
-  getAvatar(member: any) {
-    const name = member.name || `${member.firstName} ${member.lastName}`;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=32`;
-  }
-
-  getStatusBadgeClass(s: string) {
-    if (!s) return 'bg-not-started';
-    return `bg-${s.toLowerCase().replace(/_/g, '-')}`;
-  }
+  getAvatar(member: any) { return `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || member.firstName)}&background=random&size=32`; }
 }

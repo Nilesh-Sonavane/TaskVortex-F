@@ -45,6 +45,10 @@ export class TaskDetail implements OnInit, OnDestroy {
   previewUrl = signal<string>('');
   zoomLevel = signal(1);
 
+  // timer
+  timeLeft = signal<string>('');
+  private timerInterval: any;
+
   // --- FILTERED HISTORY LOGIC ---
   // Add a signal for performer search
 
@@ -73,17 +77,31 @@ export class TaskDetail implements OnInit, OnDestroy {
   });
 
   // --- PERMISSION LOGIC ---
+  // canEdit = computed(() => {
+  //   const userJson = localStorage.getItem('user_details');
+  //   const currentTask = this.task();
+  //   if (!userJson) return false;
+
+  //   const user = JSON.parse(userJson);
+  //   const isAuthority = user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'EMPLOYEE';
+  //   const isCreator = currentTask.creatorEmail === user.email;
+  //   const isAssignee = currentTask.assigneeId === user.id;
+
+  //   return isAuthority || isCreator || isAssignee;
+  // });
+
+  // --- UPDATED OPEN PERMISSION LOGIC ---
   canEdit = computed(() => {
     const userJson = localStorage.getItem('user_details');
     const currentTask = this.task();
+
+    // Safety check: if no user or no task data, hide the button
     if (!userJson || !currentTask) return false;
 
     const user = JSON.parse(userJson);
-    const isAuthority = user.role === 'ADMIN' || user.role === 'MANAGER';
-    const isCreator = currentTask.creatorEmail === user.email;
-    const isAssignee = currentTask.assigneeId === user.id;
 
-    return isAuthority || isCreator || isAssignee;
+    // OPEN SYSTEM: If they are logged in as ADMIN, MANAGER, or EMPLOYEE, they can edit.
+    return ['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user.role);
   });
 
   taskFiles = computed(() => this.task()?.attachments || []);
@@ -174,6 +192,10 @@ export class TaskDetail implements OnInit, OnDestroy {
       next: (data) => {
         this.task.set(data);
         this.loadTaskHistory(id);
+        // ADD THIS: Start the timer
+        this.calculateTimeLeft();
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => this.calculateTimeLeft(), 60000); // Updates every 1 minute
         this.isLoading.set(false);
         window.scrollTo(0, 0);
       },
@@ -304,6 +326,62 @@ export class TaskDetail implements OnInit, OnDestroy {
       if (fileName) this.viewFile(fileName);
     }
   }
+  // --- OVERDUE CHECK ---
+  isOverdue = computed(() => {
+    const currentTask = this.task();
+    if (!currentTask || !currentTask.dueDate) return false;
 
-  ngOnDestroy() { if (this.routeSub) this.routeSub.unsubscribe(); }
+    // Do not show overdue warning if the task is already completed or cancelled
+    const completedStatuses = ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'DONE', 'CANCELLED'];
+    if (completedStatuses.includes(currentTask.status)) {
+      return false;
+    }
+
+    const dueDate = new Date(currentTask.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate day comparison
+
+    return dueDate < today;
+  });
+
+  calculateTimeLeft() {
+    const currentTask = this.task();
+    if (!currentTask || !currentTask.dueDate) {
+      this.timeLeft.set('');
+      return;
+    }
+
+    // Don't run the timer if the task is already finished
+    const completedStatuses = ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'DONE', 'CANCELLED'];
+    if (completedStatuses.includes(currentTask.status)) {
+      this.timeLeft.set('Task Completed');
+      return;
+    }
+
+    // Set deadline to 11:59:59 PM of the Due Date
+    const deadline = new Date(currentTask.dueDate);
+    deadline.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+    const diff = deadline.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      const overdueDays = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
+      this.timeLeft.set(overdueDays === 0 ? 'Due Today!' : `Overdue by ${overdueDays} day(s)`);
+      return;
+    }
+
+    // Math for days, hours, and minutes
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / 1000 / 60) % 60);
+
+    if (days > 0) {
+      this.timeLeft.set(`${days} days, ${hours} hrs left`);
+    } else {
+      this.timeLeft.set(`${hours} hrs, ${minutes} mins left`);
+    }
+  }
+
+  ngOnDestroy() { if (this.routeSub) this.routeSub.unsubscribe(); if (this.timerInterval) clearInterval(this.timerInterval); }
 }

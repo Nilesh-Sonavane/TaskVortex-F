@@ -554,3 +554,29 @@ label {
     padding: 8px 12px;
     border-radius: 6px;
 }
+
+/* Custom Overdue Pulse Animation */
+@keyframes overdue-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.6;
+        color: #dc3545;
+    }
+
+    /* Bootstrap danger red */
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-overdue {
+    animation: overdue-pulse 1.5s infinite ease-in-out;
+    display: inline-block;
+    /* Required for transform to work on icons */
+}

@@ -213,6 +213,27 @@
                             <span class="fw-bold text-dark">{{ task().priority | titlecase }}</span>
                         </div>
                     </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label class="small text-muted d-block mb-1">Task Points</label>
+                            <div class="d-flex align-items-center gap-2 p-2 border rounded bg-white shadow-sm">
+                                <i class="fa-solid fa-star text-warning"></i>
+                                <span class="fw-bold text-dark">
+                                    {{ task().taskPoints ? task().taskPoints : 'Not set' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <label class="small text-muted d-block mb-1">Est. Hours</label>
+                            <div class="d-flex align-items-center gap-2 p-2 border rounded bg-white shadow-sm">
+                                <i class="fa-solid fa-clock text-info"></i>
+                                <span class="fw-bold text-dark">
+                                    {{ task().workingHours ? task().workingHours + ' hrs' : 'Not set' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="mb-4 text-center border-top pt-4">
                         <label class="small text-muted d-block mb-2">{{ getAssignmentLabel() }}</label>
@@ -224,22 +245,33 @@
                         </div>
                     </div>
 
-                    <div class="border-top pt-4">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <i class="fa-regular fa-calendar-check text-primary fs-5"></i>
-                            <div>
-                                <label class="small text-muted d-block lh-1">Due Date</label>
-                                <span class="fw-bold text-dark">{{ task().dueDate | date:'MMMM d, y' }}</span>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="fa-regular fa-calendar-check fs-5"
+                            [ngClass]="isOverdue() ? 'text-danger' : 'text-primary'"></i>
+                        <div class="flex-grow-1">
+                            <label class="small text-muted d-block lh-1 mb-1">Due Date</label>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold" [ngClass]="isOverdue() ? 'text-danger' : 'text-dark'">
+                                    {{ task().dueDate | date:'dd/MM/yyyy' }}
+                                </span>
                             </div>
+
+
                         </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <i class="fa-solid fa-diagram-project text-primary fs-5"></i>
-                            <div>
-                                <label class="small text-muted d-block lh-1">Project</label>
-                                <span class="fw-bold text-dark">{{ task().project | titlecase }}</span>
-                            </div>
-                        </div>
+
                     </div>
+                    @if (timeLeft()) {
+                    <div class="mt-2 p-2 rounded-3 d-flex align-items-center gap-2"
+                        [ngClass]="isOverdue() ? 'bg-danger bg-opacity-10 border border-danger-subtle' : 'bg-light border border-light-subtle'">
+                        <i class="fa-solid fa-stopwatch"
+                            [ngClass]="isOverdue() ? 'text-danger fa-beat-fade' : 'text-primary'"
+                            [style.animation-duration]="isOverdue() ? '2s' : ''">
+                        </i>
+                        <span class="small fw-bold" [ngClass]="isOverdue() ? 'text-danger' : 'text-dark'">
+                            {{ timeLeft() }}
+                        </span>
+                    </div>
+                    }
                 </div>
 
                 <div class="card border-0 shadow-sm p-4">

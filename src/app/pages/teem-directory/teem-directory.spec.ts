@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TeemDirectory } from './teem-directory';
+import { TeamDirectory } from './teem-directory';
 
 describe('TeemDirectory', () => {
-  let component: TeemDirectory;
-  let fixture: ComponentFixture<TeemDirectory>;
+  let component: TeamDirectory;
+  let fixture: ComponentFixture<TeamDirectory>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TeemDirectory]
+      imports: [TeamDirectory]
     })
-    .compileComponents();
+      .compileComponents();
 
-    fixture = TestBed.createComponent(TeemDirectory);
+    fixture = TestBed.createComponent(TeamDirectory);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

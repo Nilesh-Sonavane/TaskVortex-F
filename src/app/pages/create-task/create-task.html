@@ -155,11 +155,11 @@
 
                         <div class="mb-3">
                             <label class="form-label">Project <span class="text-danger">*</span></label>
+
+                            @if (!isEditMode) {
                             <select class="form-select shadow-sm" formControlName="projectId"
                                 [class.is-invalid]="taskForm.get('projectId')?.invalid && taskForm.get('projectId')?.touched">
-
                                 <option [ngValue]="null" disabled selected>Select a project...</option>
-
                                 @for (project of managedProjects; track project.id) {
                                 <option [value]="project.id">
                                     {{ project.name | titlecase }} ({{ project.projectKey }})
@@ -170,13 +170,9 @@
                             @if (managedProjects.length > 0) {
                             <div class="mt-2 text-muted animate-in" style="font-size: 0.75rem;">
                                 <i class="fa-solid fa-circle-info me-1 text-primary"></i>
-                                @if (currentUser?.role === 'ADMIN') {
-                                Viewing all global projects.
-                                } @else if (currentUser?.role === 'MANAGER') {
-                                Viewing projects you manage or belong to.
-                                } @else {
-                                Viewing projects you are assigned to.
-                                }
+                                @if (currentUser?.role === 'ADMIN') { Viewing all global projects. }
+                                @else if (currentUser?.role === 'MANAGER') { Viewing projects you manage or belong to. }
+                                @else { Viewing projects you are assigned to. }
                             </div>
                             }
 
@@ -188,21 +184,47 @@
                                 </small>
                             </div>
                             }
+                            } @else {
+                            <div class="d-flex align-items-center p-2 bg-white border rounded shadow-sm animate-in">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center me-3"
+                                    style="width: 35px; height: 35px;">
+                                    <i class="fa-solid fa-folder-tree"></i>
+                                </div>
+                                <div class="d-flex flex-column overflow-hidden">
+                                    <div class="fw-bold text-dark small text-truncate">
+                                        {{ getSelectedProjectName() | titlecase }}
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">
+                                        <i class="fa-solid fa-lock me-1"></i> Locked for this task
+                                    </div>
+                                </div>
+                            </div>
+                            }
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label fw-bold small text-muted">Due Date</label>
-                            <div class="input-group">
+                            <div class="input-group shadow-sm">
                                 <span class="input-group-text bg-white border-end-0">
-                                    <i class="fa-solid fa-calendar-day text-primary"></i>
+                                    <i class="fa-solid fa-calendar-day"
+                                        [ngClass]="isOverdue() ? 'text-danger' : 'text-primary'"></i>
                                 </span>
                                 <input type="date" id="dueDate" formControlName="dueDate"
-                                    class="form-control border-start-0 ps-0" [min]="minDate">
+                                    class="form-control border-start-0 ps-0" [min]="isEditMode ? null : minDate"
+                                    [class.is-invalid]="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.dirty">
                             </div>
 
-                            @if (taskForm.get('dueDate')?.touched && taskForm.get('dueDate')?.errors?.['pastDate']) {
-                            <div class="text-danger extra-small mt-1">
+                            @if (taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.dirty) {
+                            @if (taskForm.get('dueDate')?.errors?.['pastDate']) {
+                            <div class="text-danger extra-small mt-1 animate-in fw-bold">
                                 <i class="fa-solid fa-circle-exclamation me-1"></i> Due date cannot be in the past.
+                            </div>
+                            }
+                            }
+
+                            @if (isEditMode && isOverdue() && !taskForm.get('dueDate')?.dirty) {
+                            <div class="text-warning extra-small mt-1 animate-in fw-bold">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> This task is currently overdue.
                             </div>
                             }
                         </div>
@@ -224,8 +246,45 @@
                             </div>
                         </div>
 
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label fw-bold small text-muted">Task Points</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fa-solid fa-star text-warning"></i>
+                                    </span>
+                                    <input type="number" formControlName="taskPoints"
+                                        class="form-control border-start-0 ps-0" placeholder="e.g. 5" min="0">
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <label class="form-label fw-bold small text-muted">Est. Hours</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fa-solid fa-clock text-info"></i>
+                                    </span>
+                                    <input type="number" formControlName="workingHours"
+                                        class="form-control border-start-0 ps-0" placeholder="e.g. 8.5" min="0"
+                                        step="0.5">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-4 position-relative">
-                            <label class="form-label">Assigned Member <span class="text-danger">*</span></label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">Assigned Member <span
+                                        class="text-danger">*</span></label>
+
+                                @if (canClaimTask()) {
+                                <button type="button" (click)="assignToMe()"
+                                    class="btn btn-link btn-sm p-0 text-decoration-none fw-bold shadow-none animate-in"
+                                    style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-user-plus me-1"></i>Assign to Me
+                                </button>
+                                }
+                            </div>
+
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fa-solid fa-magnifying-glass text-muted"></i>

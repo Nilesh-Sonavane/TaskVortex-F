@@ -190,7 +190,7 @@
                         </p>
 
                         <div class="audit-details" [innerHTML]="activity.safeDetails"></div>
-                        <span class="time-ago">{{ activity.timestamp | date:'short' }}</span>
+                        <span class="time-ago">{{ activity.timestamp | date:'MMMM d, y | hh:mm a' }}</span>
                     </div>
                 </div>
                 } @empty {
@@ -241,7 +241,7 @@
                         </p>
 
                         <div class="audit-details" [innerHTML]="activity.safeDetails"></div>
-                        <span class="time-ago">{{ activity.timestamp | date:'short' }}</span>
+                        <span class="time-ago">{{ activity.timestamp | date:'MMMM d, y | hh:mm a' }}</span>
                     </div>
                 </div>
                 } @empty {
