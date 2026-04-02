@@ -301,3 +301,21 @@
  .assignee-input:not(:focus) {
      text-transform: capitalize;
  }
+
+ /* Truncates the text inside the select box when closed */
+ .truncate-dropdown {
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     padding-right: 30px;
+     /* Leaves room for the dropdown arrow */
+     max-width: 100%;
+ }
+
+ /* Attempts to truncate the options in the opened list 
+   (Note: Native <option> styling is limited depending on the OS/Browser) */
+ .truncate-dropdown option {
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+ }

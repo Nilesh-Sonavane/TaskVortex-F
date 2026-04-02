@@ -16,7 +16,7 @@
 
         <div class="kpi-card">
             <div class="kpi-icon icon-purple"><i class="fa-solid fa-inbox"></i></div>
-            <div class="kpi-data"><span class="label">My Tasks</span><span class="value">{{ employeeStats().todo
+            <div class="kpi-data"><span class="label">My Tasks</span><span class="value">{{ employeeStats().total
                     }}</span></div>
         </div>
         <div class="kpi-card">
@@ -33,7 +33,7 @@
         @if (auth.isManager()) {
         <div class="kpi-card">
             <div class="kpi-icon icon-blue"><i class="fa-solid fa-list-check"></i></div>
-            <div class="kpi-data"><span class="label">Total Tasks</span><span class="value">{{ globalStats().totalTasks
+            <div class="kpi-data"><span class="label">Active Tasks</span><span class="value">{{ globalStats().totalTasks
                     }}</span></div>
         </div>
         <div class="kpi-card">

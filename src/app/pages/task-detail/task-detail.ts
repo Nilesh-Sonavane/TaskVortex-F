@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog';
 import { Loader } from '../../components/loader/loader';
 import { TaskService } from '../../services/task-service';
+import { TimeLogService } from '../../services/time-log-service';
 import { ToastService } from '../../services/toast';
 
 @Component({
@@ -21,6 +22,7 @@ export class TaskDetail implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private taskService = inject(TaskService);
+  private timeLogService = inject(TimeLogService);
   private sanitizer = inject(DomSanitizer);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
@@ -28,6 +30,9 @@ export class TaskDetail implements OnInit, OnDestroy {
   performerSearch = signal<string>('');
 
   confirmDialog = viewChild<ConfirmDialogComponent>('confirmDialog');
+
+  // --- CURRENT USER STATE ---
+  currentUser = JSON.parse(localStorage.getItem('user_details') || '{}');
 
   // Data Signals
   task = signal<any>(null);
@@ -45,21 +50,53 @@ export class TaskDetail implements OnInit, OnDestroy {
   previewUrl = signal<string>('');
   zoomLevel = signal(1);
 
-  // timer
+  // Timer Signals
   timeLeft = signal<string>('');
   private timerInterval: any;
 
-  // --- FILTERED HISTORY LOGIC ---
-  // Add a signal for performer search
+  // --- TIME TRACKING SIGNALS ---
+  isLogTimeModalOpen = signal(false);
+  estimatedHours = signal<number>(0);
+  loggedHours = signal<number>(0);
 
+  // --- ULTRA-SAFE FILTERED HISTORY LOGIC ---
   filteredHistory = computed(() => {
     const allLogs = this.historyList();
-    const currentId = this.task()?.id; // The ID of Task 1
+    const currentTask = this.task();
 
-    // STEP 1: Strict ID Filtering
-    let logs = allLogs.filter(log => log.entityId === currentId);
+    if (!currentTask || !allLogs || allLogs.length === 0) return [];
 
-    // STEP 2: Date Filtering (Your existing logic)
+    let logs = [];
+
+    if (currentTask.parentTaskId) {
+      // --- SUBTASK LOGIC ---
+      const currentId = String(currentTask.id);
+      const parentId = String(currentTask.parentTaskId);
+
+      logs = allLogs.filter(log => {
+        const logEntityId = String(log.entityId || log.taskId);
+        const isDirectLog = (logEntityId === currentId);
+        const isParentLog = (logEntityId === parentId);
+
+        // ULTRA-SAFE MATCHING: Removes ALL spaces, casing, and symbols. 
+        // E.g., "Add A Text Field!" becomes "addatextfield"
+        const normalize = (str: string) => (str || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+        const cleanDetails = normalize(log.details);
+        const cleanTitle = normalize(currentTask.title);
+        const mentionsSubtask = cleanDetails.includes(cleanTitle);
+
+        return isDirectLog || (isParentLog && mentionsSubtask);
+      });
+    } else {
+      // --- PARENT TASK LOGIC ---
+      const subtaskIds = currentTask.subtasks?.map((sub: any) => String(sub.id)) || [];
+      const allowedIds = [String(currentTask.id), ...subtaskIds];
+
+      logs = allLogs.filter(log => allowedIds.includes(String(log.entityId || log.taskId)));
+    }
+
+    // STEP 2: Date Filtering
     const start = this.startDate();
     const end = this.endDate();
     if (!start && !end) return logs;
@@ -75,32 +112,14 @@ export class TaskDetail implements OnInit, OnDestroy {
       return true;
     });
   });
-
-  // --- PERMISSION LOGIC ---
-  // canEdit = computed(() => {
-  //   const userJson = localStorage.getItem('user_details');
-  //   const currentTask = this.task();
-  //   if (!userJson) return false;
-
-  //   const user = JSON.parse(userJson);
-  //   const isAuthority = user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'EMPLOYEE';
-  //   const isCreator = currentTask.creatorEmail === user.email;
-  //   const isAssignee = currentTask.assigneeId === user.id;
-
-  //   return isAuthority || isCreator || isAssignee;
-  // });
-
   // --- UPDATED OPEN PERMISSION LOGIC ---
   canEdit = computed(() => {
     const userJson = localStorage.getItem('user_details');
     const currentTask = this.task();
 
-    // Safety check: if no user or no task data, hide the button
     if (!userJson || !currentTask) return false;
 
     const user = JSON.parse(userJson);
-
-    // OPEN SYSTEM: If they are logged in as ADMIN, MANAGER, or EMPLOYEE, they can edit.
     return ['ADMIN', 'MANAGER', 'EMPLOYEE'].includes(user.role);
   });
 
@@ -108,15 +127,14 @@ export class TaskDetail implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.routeSub = this.route.params.subscribe(params => {
-      const id = params['id']; // This is '1' for Task 1
+      const id = params['id'];
       if (id) {
-        this.loadTaskDetails(Number(id)); // Only Task 1 data is requested
+        this.loadTaskDetails(Number(id));
       }
     });
   }
 
-  // --- DYNAMIC ASSIGNMENT LOGIC (Manager vs Employee View) ---
-
+  // --- DYNAMIC ASSIGNMENT LOGIC ---
   getAssignmentLabel = () => {
     const userJson = localStorage.getItem('user_details');
     const currentTask = this.task();
@@ -124,12 +142,10 @@ export class TaskDetail implements OnInit, OnDestroy {
 
     const user = JSON.parse(userJson);
 
-    // If I am the Assignee -> Show who is managing me
     if (currentTask.assigneeId === user.id) {
       return 'Project Managed By';
     }
 
-    // If I am the Creator (Manager) -> Show who I assigned it to
     if (currentTask.creatorEmail === user.email) {
       return 'Task Assigned To';
     }
@@ -144,17 +160,14 @@ export class TaskDetail implements OnInit, OnDestroy {
 
     const user = JSON.parse(userJson);
 
-    // Scenario: I am the Employee -> Show Manager's name (the creator)
     if (currentTask.assigneeId === user.id) {
       return currentTask.createdBy || 'Project Manager';
     }
 
-    // Scenario: I am the Manager -> Show the Employee's name I assigned it to
     if (currentTask.creatorEmail === user.email) {
       return currentTask.assigneeName || 'Employee';
     }
 
-    // Fallback for Admins or third parties
     return currentTask.assigneeName;
   };
 
@@ -166,9 +179,9 @@ export class TaskDetail implements OnInit, OnDestroy {
     const user = JSON.parse(userJson);
 
     if (currentTask.assigneeId === user.id) {
-      return currentTask.creatorEmail; // Show Manager's Email
+      return currentTask.creatorEmail;
     }
-    return currentTask.assigneeEmail; // Show Employee's Email
+    return currentTask.assigneeEmail;
   };
 
   getAssignmentAvatar = () => {
@@ -186,16 +199,35 @@ export class TaskDetail implements OnInit, OnDestroy {
   }
 
   loadTaskDetails(id: number) {
-
     this.isLoading.set(true);
     this.taskService.getTaskById(id).subscribe({
       next: (data) => {
         this.task.set(data);
         this.loadTaskHistory(id);
-        // ADD THIS: Start the timer
+
+        // Start the timer
         this.calculateTimeLeft();
         if (this.timerInterval) clearInterval(this.timerInterval);
-        this.timerInterval = setInterval(() => this.calculateTimeLeft(), 60000); // Updates every 1 minute
+        this.timerInterval = setInterval(() => this.calculateTimeLeft(), 60000);
+
+        // --- NEW FIX: Fetch PERSONALIZED Time Tracking Data ---
+        this.estimatedHours.set(data.workingHours || 0);
+
+        // Get the logged-in user's ID
+        const currentUserId = this.currentUser?.id;
+
+        if (currentUserId) {
+          // Call the new personalized method passing both task ID and user ID
+          this.timeLogService.getUserTotalHours(id, currentUserId).subscribe({
+            next: (res: any) => {
+              // Handle response whether backend returns a direct number or an object
+              const personalHours = typeof res === 'number' ? res : (res?.totalLoggedHours || 0);
+              this.loggedHours.set(personalHours);
+            },
+            error: (err) => console.error('Error fetching personalized total hours', err)
+          });
+        }
+
         this.isLoading.set(false);
         window.scrollTo(0, 0);
       },
@@ -207,12 +239,9 @@ export class TaskDetail implements OnInit, OnDestroy {
   }
 
   loadTaskHistory(id: number) {
-    // Clears any old data from Task 2 if you navigated directly
     this.historyList.set([]);
-
     this.taskService.getTaskHistory(id).subscribe({
       next: (logs) => {
-        // The backend returns: WHERE entity_name = 'TASKS' AND entity_id = 1
         this.historyList.set(logs);
       },
       error: (err) => console.error('History fetch error', err)
@@ -257,7 +286,7 @@ export class TaskDetail implements OnInit, OnDestroy {
     });
   }
 
-  // UI Helpers
+  // --- UI HELPERS ---
   getCleanFileName = (fn: string) => fn?.includes('_') ? fn.split('_').slice(1).join('_') : fn;
 
   getFileIcon(fileName: string): string {
@@ -326,12 +355,12 @@ export class TaskDetail implements OnInit, OnDestroy {
       if (fileName) this.viewFile(fileName);
     }
   }
+
   // --- OVERDUE CHECK ---
   isOverdue = computed(() => {
     const currentTask = this.task();
     if (!currentTask || !currentTask.dueDate) return false;
 
-    // Do not show overdue warning if the task is already completed or cancelled
     const completedStatuses = ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'DONE', 'CANCELLED'];
     if (completedStatuses.includes(currentTask.status)) {
       return false;
@@ -339,7 +368,7 @@ export class TaskDetail implements OnInit, OnDestroy {
 
     const dueDate = new Date(currentTask.dueDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate day comparison
+    today.setHours(0, 0, 0, 0);
 
     return dueDate < today;
   });
@@ -351,14 +380,12 @@ export class TaskDetail implements OnInit, OnDestroy {
       return;
     }
 
-    // Don't run the timer if the task is already finished
     const completedStatuses = ['DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'DONE', 'CANCELLED'];
     if (completedStatuses.includes(currentTask.status)) {
       this.timeLeft.set('Task Completed');
       return;
     }
 
-    // Set deadline to 11:59:59 PM of the Due Date
     const deadline = new Date(currentTask.dueDate);
     deadline.setHours(23, 59, 59, 999);
 
@@ -371,7 +398,6 @@ export class TaskDetail implements OnInit, OnDestroy {
       return;
     }
 
-    // Math for days, hours, and minutes
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const minutes = Math.floor((diff / 1000 / 60) % 60);
@@ -383,5 +409,60 @@ export class TaskDetail implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() { if (this.routeSub) this.routeSub.unsubscribe(); if (this.timerInterval) clearInterval(this.timerInterval); }
+  // --- TIME LOGGING COMPUTED DATA ---
+  timeProgressPercent = computed(() => {
+    const est = this.estimatedHours();
+    const logged = this.loggedHours();
+    if (est === 0) return 0;
+    return Math.min(Math.round((logged / est) * 100), 100);
+  });
+
+  isOverBudget = computed(() => this.loggedHours() > this.estimatedHours());
+
+  logTimeData = {
+    hours: 0,
+    minutes: 0,
+    date: new Date().toISOString().split('T')[0],
+    description: ''
+  };
+
+  openLogTimeModal() {
+    this.isLogTimeModalOpen.set(true);
+  }
+
+  closeLogTimeModal() {
+    this.isLogTimeModalOpen.set(false);
+    this.logTimeData = { hours: 0, minutes: 0, date: new Date().toISOString().split('T')[0], description: '' };
+  }
+
+  saveTimeLog() {
+    const totalHoursToLog = this.logTimeData.hours + (this.logTimeData.minutes / 60);
+
+    if (totalHoursToLog <= 0) return;
+
+    const payload = {
+      userId: this.currentUser.id,
+      taskId: this.task().id,
+      logDate: this.logTimeData.date,
+      loggedHours: totalHoursToLog,
+      description: this.logTimeData.description
+    };
+
+    this.timeLogService.logTime(payload).subscribe({
+      next: (savedLog) => {
+        this.loggedHours.update(current => current + totalHoursToLog);
+        this.closeLogTimeModal();
+        this.toast.show('Time logged successfully!', 'success');
+      },
+      error: (err) => {
+        console.error("Failed to save time log", err);
+        this.toast.show('Failed to log time. Please try again.', 'error');
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.routeSub) this.routeSub.unsubscribe();
+    if (this.timerInterval) clearInterval(this.timerInterval);
+  }
 }

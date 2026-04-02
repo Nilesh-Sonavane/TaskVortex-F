@@ -1,0 +1,425 @@
+/* Container constraint so it doesn't break global layout */
+.dashboard-content {
+    padding: 1.5rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: transparent;
+}
+
+/* 1. PREMIUM BANNER */
+.profile-banner-wrapper {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid #eaedf1;
+    padding-bottom: 1.5rem;
+}
+
+.banner-background {
+    height: 120px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+}
+
+.banner-content {
+    padding: 0 2.5rem;
+    margin-top: -45px;
+    /* Pulls the avatar up into the banner */
+}
+
+.avatar-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    background: white;
+    padding: 4px;
+    border-radius: 24px;
+}
+
+.avatar-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    border: 3px solid white;
+    border-radius: 50%;
+}
+
+.role-badge {
+    display: inline-block;
+    background: #1e293b;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 50px;
+}
+
+.employee-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.5px;
+}
+
+.employee-email {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.btn-nav {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    padding: 0.5rem 1rem;
+}
+
+.btn-nav:hover:not(:disabled) {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.month-display {
+    color: #0f172a !important;
+    opacity: 1 !important;
+    min-width: 160px;
+}
+
+.btn-nav.disabled-arrow {
+    cursor: not-allowed !important;
+    opacity: 0.3;
+    pointer-events: all !important;
+    background-color: #f8f9fa;
+}
+
+.btn-nav.disabled-arrow i {
+    cursor: not-allowed;
+}
+
+/* 2. KPI GLASS CARDS */
+.kpi-glass-card {
+    background: white;
+    border: 1px solid #eaedf1;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.kpi-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.bg-blue-soft {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.bg-purple-soft {
+    background: #f5f3ff;
+    color: #8b5cf6;
+}
+
+.bg-green-soft {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.bg-orange-soft {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.kpi-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin: 0 0 0.25rem 0;
+}
+
+.kpi-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* 3. VORTEX CARDS & TABLES */
+.vortex-card {
+    background: white;
+    border: 1px solid #eaedf1;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+}
+
+.card-header-modern {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: transparent;
+}
+
+.card-header-modern h4 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.vortex-modern-table {
+    margin-bottom: 0;
+}
+
+.vortex-modern-table thead th {
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem 1rem;
+    border-bottom: 2px solid #f1f5f9;
+    font-weight: 700;
+}
+
+.vortex-modern-table tbody td {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.vortex-modern-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.badge-soft-primary {
+    background: #eff6ff;
+    color: #3b82f6;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.badge-project {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+}
+
+/* 4. TRUE VERTICAL TIMELINE */
+.true-timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.true-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 55px;
+    /* Aligns with the marker */
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.timeline-event {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.event-date {
+    width: 45px;
+    text-align: right;
+    padding-right: 15px;
+    padding-top: 2px;
+}
+
+.event-date .day {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.event-date .month {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.event-marker {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 50%;
+    margin-left: 5px;
+    /* Centers on the line */
+    margin-top: 6px;
+    z-index: 2;
+    box-shadow: 0 0 0 4px white;
+    /* Clears the line behind it */
+}
+
+.event-content {
+    flex: 1;
+    margin-left: 1.5rem;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #eaedf1;
+}
+
+/* Minimalist Red Outline Export Button */
+.btn-outline-red {
+    background-color: transparent;
+    /* No background */
+    color: #dc3545;
+    /* Standard clean red */
+    border: 1px solid #dc3545;
+    /* Only the red outline */
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-outline-red:hover:not(:disabled) {
+    background-color: rgba(220, 53, 69, 0.08);
+    /* Very faint red tint on hover */
+}
+
+.btn-outline-red:disabled {
+    color: #fca5a5;
+    /* Faded red for disabled state */
+    border-color: #fca5a5;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .profile-banner-wrapper {
+        padding: 1rem;
+    }
+
+    .avatar-container {
+        width: 90px;
+        height: 90px;
+    }
+
+    .employee-name {
+        font-size: 1.5rem;
+    }
+
+    .employee-email {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .row.g-4 {
+        flex-direction: column;
+    }
+
+    .col-xl-3,
+    .col-xl-8,
+    .col-xl-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .kpi-glass-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .kpi-icon-box {
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-content {
+        padding: 1rem;
+    }
+
+    .profile-banner-wrapper {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .vortex-modern-table thead {
+        display: none;
+    }
+
+    .vortex-modern-table tbody td {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .vortex-modern-table tbody tr {
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .true-timeline {
+        padding-left: 0;
+    }
+
+    .event-date {
+        text-align: left;
+        padding-right: 0;
+    }
+
+    .event-content {
+        margin-left: 0;
+    }
+}

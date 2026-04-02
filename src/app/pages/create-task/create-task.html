@@ -157,11 +157,13 @@
                             <label class="form-label">Project <span class="text-danger">*</span></label>
 
                             @if (!isEditMode) {
-                            <select class="form-select shadow-sm" formControlName="projectId"
+                            <select class="form-select shadow-sm truncate-dropdown" formControlName="projectId"
                                 [class.is-invalid]="taskForm.get('projectId')?.invalid && taskForm.get('projectId')?.touched">
+
                                 <option [ngValue]="null" disabled selected>Select a project...</option>
+
                                 @for (project of managedProjects; track project.id) {
-                                <option [value]="project.id">
+                                <option [value]="project.id" [title]="project.name + ' (' + project.projectKey + ')'">
                                     {{ project.name | titlecase }} ({{ project.projectKey }})
                                 </option>
                                 }
@@ -276,23 +278,40 @@
                                 <label class="form-label mb-0">Assigned Member <span
                                         class="text-danger">*</span></label>
 
-                                @if (canClaimTask()) {
+                                @if (canClaimTask() && !hasClaimed) {
                                 <button type="button" (click)="assignToMe()"
                                     class="btn btn-link btn-sm p-0 text-decoration-none fw-bold shadow-none animate-in"
                                     style="font-size: 0.75rem;">
                                     <i class="fa-solid fa-user-plus me-1"></i>Assign to Me
                                 </button>
                                 }
-                            </div>
 
+                                @if (hasClaimed) {
+                                <button type="button" (click)="cancelClaim()"
+                                    class="btn btn-link btn-sm p-0 text-decoration-none fw-bold shadow-none text-warning animate-in"
+                                    style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-arrow-rotate-left me-1"></i>Undo Claim
+                                </button>
+                                }
+                            </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fa-solid fa-magnifying-glass text-muted"></i>
                                 </span>
+
                                 <input type="text" class="form-control border-start-0 assignee-input"
                                     placeholder="Search team..." [(ngModel)]="assigneeSearchTerm"
                                     [ngModelOptions]="{standalone: true}" (focus)="isDropdownOpen = true"
-                                    (blur)="toggleDropdown(false)" [disabled]="currentUser?.role === 'EMPLOYEE'">
+                                    (blur)="toggleDropdown(false)"
+                                    [disabled]="taskForm.get('assigneeId')?.disabled === true">
+
+                                @if (taskForm.get('assigneeId')?.value && !taskForm.get('assigneeId')?.disabled) {
+                                <button class="btn btn-white border border-start-0 text-muted" type="button"
+                                    (click)="clearAssignee()" title="Clear Assignee"
+                                    style=" background: white;color: red !important;border: 1px solid red;">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                }
                             </div>
 
                             @if (isDropdownOpen && searchedEmployees.length > 0 && currentUser?.role !== 'EMPLOYEE') {
@@ -328,6 +347,7 @@
                                 </div>
                             </div>
                             }
+
                         </div>
                     </div>
                 </div>

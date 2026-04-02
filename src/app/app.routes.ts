@@ -13,6 +13,7 @@ import { CreateTaskComponent } from './pages/create-task/create-task';
 import { DashboardComponent } from './pages/dashboard/dashboard';
 import { MyTasksComponent } from './pages/my-tasks/my-tasks';
 import { Profile } from './pages/profile/profile';
+import { ReportsComponent } from './pages/reports/reports';
 import { TaskDetail } from './pages/task-detail/task-detail';
 import { TaskListComponent } from './pages/task-list/task-list';
 import { TeamDirectory } from './pages/teem-directory/teem-directory';
@@ -47,7 +48,8 @@ export const routes: Routes = [
             { path: 'edit-project/:id', component: AddProjectComponent, title: 'Edit Project | TaskVortex' },
             { path: 'board', component: BoardComponent, title: 'Board | TaskVortex' },
             { path: 'profile', component: Profile, title: 'Profile | TaskVortex' },
-
+            { path: 'reports', component: ReportsComponent, title: 'Reports & Analytics | TaskVortex' },
+            { path: 'reports/employee/:id', loadComponent: () => import('./pages/employee-report-detail/employee-report-detail').then(m => m.EmployeeReportDetailComponent), title: 'Report Detail | TaskVortex' },
 
             // --- Manager Routes (Tasks) ---
             // { path: 'tasks', component: TaskListComponent, title: 'All Tasks - TaskVortex' }, // Uncomment when ready

@@ -28,8 +28,8 @@
             <i class="fa-solid fa-house"></i> Dashboard
         </a>
 
-
-        <a routerLink="/board" routerLinkActive="active-link" class="nav-link" (click)="closeSidebar()">
+        <a routerLink="/board" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: false }"
+            class="nav-link" (click)="closeSidebar()">
             <i class="fa-solid fa-table-columns"></i> Kanban Board
         </a>
 
@@ -56,6 +56,11 @@
             <a routerLink="/tasks" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}"
                 class="nav-link" (click)="closeSidebar()">
                 <i class="fa-solid fa-network-wired"></i> Team Task Board
+            </a>
+
+            <a routerLink="/reports" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: false}"
+                class="nav-link" (click)="closeSidebar()">
+                <i class="fa-solid fa-chart-line"></i> Reports & Analytics
             </a>
         </div>
         }

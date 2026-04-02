@@ -70,8 +70,32 @@ export class BoardComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
-    // Re-fetch board tasks whenever a filter signal or loading state changes
+    // 1. RESTORE MEMORY: Check if we saved filters before we navigated away
+    const savedState = sessionStorage.getItem('taskvortex_board_filters');
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+
+      // Inject the saved memory directly into your signals before the board loads!
+      this.selectedProjectIds.set(parsed.selectedProjectIds || []);
+      this.selectedAssigneeIds.set(parsed.selectedAssigneeIds || []);
+      this.selectedStatuses.set(parsed.selectedStatuses || []);
+      this.selectedDepartments.set(parsed.selectedDepartments || []);
+      this.groupBy.set(parsed.groupBy || 'status');
+    }
+
+    // 2. YOUR EXISTING EFFECT (Now with Auto-Save!)
     effect(() => {
+      // Automatically save the current state to memory every time a user clicks a filter
+      const stateToSave = {
+        selectedProjectIds: this.selectedProjectIds(),
+        selectedAssigneeIds: this.selectedAssigneeIds(),
+        selectedStatuses: this.selectedStatuses(),
+        selectedDepartments: this.selectedDepartments(),
+        groupBy: this.groupBy(),
+      };
+      sessionStorage.setItem('taskvortex_board_filters', JSON.stringify(stateToSave));
+
+      // Trigger the backend fetch just like you were already doing
       this.fetchBoardData();
     }, { allowSignalWrites: true });
   }

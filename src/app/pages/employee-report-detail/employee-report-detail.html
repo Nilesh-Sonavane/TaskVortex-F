@@ -1,0 +1,182 @@
+<div class="dashboard-content" id="pdf-report-content" *ngIf="employee()">
+
+    <div class="profile-banner-wrapper mb-5">
+        <div class="banner-background"></div>
+        <div class="banner-content">
+            <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
+
+                <div class="d-flex align-items-end gap-4">
+                    <div class="avatar-container shadow-sm">
+                        <img [src]="getAvatar(employee())" alt="Profile">
+                        <div class="status-indicator" [class.bg-success]="employee()?.active"
+                            [class.bg-secondary]="!employee()?.active"></div>
+                    </div>
+                    <div class="profile-text pb-1">
+                        <span class="role-badge mb-2"><i class="fa-solid fa-shield-halved me-1"></i>{{ employee()?.role
+                            }}</span>
+                        <h1 class="employee-name">{{ employee()?.firstName |titlecase}} {{ employee()?.lastName
+                            |titlecase}}</h1>
+                        <p class="employee-email"><i class="fa-regular fa-envelope me-2"></i>{{ employee()?.email }}</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3 pb-2">
+                    <div class="btn-group shadow-sm">
+                        <button class="btn btn-nav" (click)="changeMonth(-1)" [disabled]="isLoading()">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+
+                        <button class="btn btn-nav month-display fw-bold" disabled>
+                            <i class="fa-regular fa-calendar-check text-primary me-2"></i>
+                            {{ selectedMonth() | date:'MMMM yyyy' }}
+                        </button>
+
+                        <button class="btn btn-nav" (click)="changeMonth(1)"
+                            [disabled]="isLoading() || isCurrentMonth()" [class.disabled-arrow]="isCurrentMonth()">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <button class="btn-outline-red" (click)="exportToPDF()" [disabled]="isExporting()">
+                        <i class="fa-solid" [ngClass]="isExporting() ? 'fa-spinner fa-spin' : 'fa-file-pdf'"></i>
+                        <span>{{ isExporting() ? 'Generating...' : 'Export PDF' }}</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-glass-card">
+                <div class="kpi-icon-box bg-blue-soft text-blue">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div class="kpi-details">
+                    <p class="kpi-title">Tasks Completed</p>
+                    <h3 class="kpi-value">{{ employeeHeader()?.completedCount || 0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-glass-card">
+                <div class="kpi-icon-box bg-purple-soft text-purple">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div class="kpi-details">
+                    <p class="kpi-title">Complexity Points</p>
+                    <h3 class="kpi-value">{{ employeeHeader()?.totalPoints || 0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-glass-card">
+                <div class="kpi-icon-box bg-green-soft text-green">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <div class="kpi-details">
+                    <p class="kpi-title">Total Hours Logged</p>
+                    <h3 class="kpi-value">{{ getTotalLoggedHours() }}h</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-glass-card">
+                <div class="kpi-icon-box bg-orange-soft text-orange">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="kpi-details">
+                    <p class="kpi-title">Efficiency Score</p>
+                    <h3 class="kpi-value text-{{ getEfficiencyColor(employee()?.efficiency) }}">
+                        {{ employeeHeader()?.efficiency || 0 }}%
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="vortex-card h-100">
+                <div class="card-header-modern">
+                    <h4 class="m-0"><i class="fa-solid fa-list-check text-primary me-2"></i>Deliverables Breakdown</h4>
+                </div>
+                <div class="table-responsive px-3">
+                    <table class="table vortex-modern-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Task ID & Title</th>
+                                <th class="text-center">Complexity</th>
+                                <th>Hours (Est / Act)</th>
+                                <th class="text-end">Project Area</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let task of tasks()">
+                                <td>
+                                    <span class="d-block fw-bold text-dark fs-6">{{ task.title |titlecase}}</span>
+                                    <span class="text-muted small font-monospace">#{{ task.id }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge-soft-primary">{{ task.points }} Pts</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="small fw-semibold text-muted">{{ task.estHours }}h</span>
+                                        <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                            <div class="progress-bar bg-primary"
+                                                [style.width.%]="(task.loggedHours / task.estHours) * 100"></div>
+                                        </div>
+                                        <span class="small fw-bold text-dark">{{ task.loggedHours }}h</span>
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge-project">{{ task.projectName }}</span>
+                                </td>
+                            </tr>
+                            <tr *ngIf="tasks().length === 0">
+                                <td colspan="4" class="text-center py-5 text-muted">No deliverables found for this
+                                    billing cycle.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="vortex-card h-100">
+                <div class="card-header-modern">
+                    <h4 class="m-0"><i class="fa-solid fa-chart-gantt text-primary me-2"></i>Activity Feed</h4>
+                </div>
+                <div class="card-body px-4 py-2">
+
+                    <div class="true-timeline" *ngIf="timeLogs().length > 0">
+                        <div class="timeline-event" *ngFor="let log of timeLogs()">
+                            <div class="event-date">
+                                <span class="day">{{ log.date | date:'dd' }}</span>
+                                <span class="month">{{ log.date | date:'MMM' }}</span>
+                            </div>
+                            <div class="event-marker"></div>
+                            <div class="event-content">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-bold text-dark small">Time Logged</span>
+                                    <span class="fw-bold text-primary small">{{ log.hours }}h</span>
+                                </div>
+                                <p class="text-muted small mb-0">{{ log.description || 'System updates and maintenance.'
+                                    }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="timeLogs().length === 0" class="text-center text-muted py-5">
+                        No activity logs recorded.
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

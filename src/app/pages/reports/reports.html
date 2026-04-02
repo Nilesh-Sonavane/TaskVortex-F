@@ -1,0 +1,224 @@
+@if (isLoading()) {
+<app-loader></app-loader>
+}
+
+<div class="dashboard-root">
+
+    <div class="box-header animate-slide-up" style="margin-bottom: 24px;">
+        <div class="title-group">
+            <i class="fa-solid fa-chart-pie text-primary" style="font-size: 24px;"></i>
+            <div>
+                <h3 style="font-size: 24px; margin-bottom: 4px;">{{ reportTitle() }}</h3>
+                <p class="text-muted" style="font-size: 14px; margin: 0;">End-of-month velocity and efficiency
+                    reporting.</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="kpi-strip animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="kpi-card">
+            <div class="kpi-icon icon-purple"><i class="fa-solid fa-star"></i></div>
+            <div class="kpi-data">
+                <span class="label">Points Delivered</span>
+                <span class="value">{{ kpiData().totalPoints }}</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon icon-blue"><i class="fa-solid fa-stopwatch"></i></div>
+            <div class="kpi-data">
+                <span class="label">Hours Logged</span>
+                <span class="value">{{ kpiData().totalLoggedHours }}<span
+                        style="font-size: 16px; color: var(--text-muted);">h</span></span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon icon-green"><i class="fa-solid fa-bolt"></i></div>
+            <div class="kpi-data">
+                <span class="label">Team Efficiency</span>
+                <span class="value">{{ kpiData().teamEfficiency }}<span
+                        style="font-size: 16px; color: var(--text-muted);">%</span></span>
+            </div>
+        </div>
+    </section>
+
+    <main class="bento-grid">
+
+        <div class="bento-box full-span animate-slide-up" style="animation-delay: 0.3s; padding: 0; overflow: hidden;">
+
+            <div class="toolbar"
+                style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                <div class="title-group">
+                    <i class="fa-solid fa-users text-muted"></i>
+                    <h3 style="margin:0; font-size: 17px; font-weight: 700; color: var(--text-main);">Employee Breakdown
+                    </h3>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="search-box position-relative">
+                        <i class="fa-solid fa-search position-absolute text-muted"
+                            style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                        <input type="text" class="form-control" placeholder="Search employee..."
+                            [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
+                            style="padding-left: 38px; border-radius: 8px; height: 38px; font-size: 13px; min-width: 200px; border: 1px solid var(--border);">
+                    </div>
+
+                    <select class="form-select" [ngModel]="selectedMonthVal()"
+                        (ngModelChange)="selectedMonthVal.set($event); onFilterChange()"
+                        style="width: 130px; border-radius: 8px;">
+                        @for (m of MONTHS; track m.value) {
+                        <option [value]="m.value">{{ m.label }}</option>
+                        }
+                    </select>
+
+                    <select class="form-select" [ngModel]="selectedYear()"
+                        (ngModelChange)="selectedYear.set($event); onFilterChange()"
+                        style="width: 100px; border-radius: 8px;">
+                        @for (y of years(); track y) {
+                        <option [value]="y">{{ y }}</option>
+                        }
+                    </select>
+
+
+                    <select class="form-select" [ngModel]="selectedProject()"
+                        (ngModelChange)="selectedProject.set($event); onFilterChange()"
+                        style="border-radius: 8px; height: 38px; font-size: 13px; border: 1px solid var(--border); min-width: 140px; max-width: 200px;">
+
+                        <option value="ALL">All Projects</option>
+                        @for (proj of projects(); track proj.id) {
+                        <option [value]="proj.id" [title]="proj.name">
+                            {{ proj.name.length > 15 ? (proj.name | slice:0:15) + '...' : proj.name }}
+                        </option>
+                        }
+                    </select>
+                    <div class="dropdown">
+                        <button class="modern-button-primary dropdown-toggle d-flex align-items-center gap-2"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2"
+                            style="border-radius: 12px; border: 1px solid var(--border) !important;">
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                    (click)="exportReport('csv')">
+                                    <i class="fa-solid fa-file-csv text-success" style="width: 16px;"></i>
+                                    <span style="font-size: 13px; font-weight: 500;">Export as CSV</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                    (click)="exportReport('excel')">
+                                    <i class="fa-solid fa-file-excel text-success" style="width: 16px;"></i>
+                                    <span style="font-size: 13px; font-weight: 500;">Export as Excel</span>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                    (click)="exportReport('pdf')">
+                                    <i class="fa-solid fa-file-pdf text-danger" style="width: 16px;"></i>
+                                    <span style="font-size: 13px; font-weight: 500;">Export as PDF</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="bento-table" style="margin-bottom: 0;">
+                    <thead>
+                        <tr>
+                            <th style="padding-top: 16px;">Team Member</th>
+                            <th class="center" style="padding-top: 16px;">Tasks</th>
+                            <th class="center" style="padding-top: 16px;">Points</th>
+                            <th class="center" style="padding-top: 16px;">Est vs Logged</th>
+                            <th style="padding-top: 16px;">Efficiency Rate</th>
+                            <th class="text-end" style="padding-top: 16px; padding-right: 24px;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (emp of paginatedReports(); track emp.name) {
+                        <tr class="modern-hover">
+                            <td>
+                                <div class="user-cell">
+                                    <img [src]="getAvatar(emp.avatar,emp.name)" class="tiny-avatar" alt="Avatar">
+                                    <span class="task-title">{{ emp.name |titlecase}}</span>
+                                </div>
+                            </td>
+                            <td class="center"><span class="status-pill pill-blue">{{ emp.tasksCompleted }} Done</span>
+                            </td>
+                            <td class="center"><span class="value-highlight">{{ emp.points }}</span></td>
+                            <td class="center">
+                                <div class="time-compare">
+                                    @if (emp.tasksCompleted > 0) {
+                                    <span class="time-est">{{ emp.estHours }}h</span>
+                                    <i class="fa-solid fa-arrow-right-long text-primary"></i>
+                                    <span class="time-log">{{ emp.loggedHours }}h</span>
+                                    } @else {
+                                    <div class="pending-badge">
+                                        <i class="fa-solid fa-spinner fa-spin"></i>
+                                        <span>{{ emp.loggedHours }}h Logged</span>
+                                    </div>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="efficiency-cell">
+                                    <div class="eff-header">
+                                        <span class="eff-text text-{{ getEfficiencyColor(emp.efficiency) }}">{{
+                                            emp.efficiency }}%</span>
+                                        <span
+                                            class="status-pill {{ getEfficiencyColor(emp.efficiency) === 'danger' ? 'danger-bg' : 'pill-green' }}">
+                                            {{ emp.efficiency >= 95 ? 'Excellent' : (emp.efficiency >= 80 ? 'Good' :
+                                            'Over Budget') }}
+                                        </span>
+                                    </div>
+                                    <div class="eff-bar-bg">
+                                        <div class="eff-bar-fill bg-{{ getEfficiencyColor(emp.efficiency) }}"
+                                            [style.width.%]="emp.efficiency > 100 ? 100 : emp.efficiency"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-end" style="padding-right: 24px;">
+                                <button class="action-btn" [routerLink]="['/reports/employee', emp.id]"
+                                    title="View Report Details">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        } @empty {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">No employees found for this criteria.
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (filteredReports().length > 0) {
+            <div class="pagination-footer d-flex justify-content-between align-items-center p-3 border-top"
+                style="background: #fff;">
+                <div class="text-muted small fw-semibold">
+                    Showing {{ (currentPage() - 1) * pageSize() + 1 }} - {{ currentPage() * pageSize() >
+                    filteredReports().length ? filteredReports().length : currentPage() * pageSize() }} of {{
+                    filteredReports().length }} employees
+                </div>
+                <div class="pagination-controls d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === 1"
+                        (click)="prevPage()">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span class="btn btn-sm btn-light disabled border-0 fw-bold">Page {{ currentPage() }} of {{
+                        totalPages() }}</span>
+                    <button class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() === totalPages()"
+                        (click)="nextPage()">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+    </main>
+</div>

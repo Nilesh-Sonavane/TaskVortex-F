@@ -1,0 +1,547 @@
+/* ========================================== */
+/* 1. CORE VARIABLES & BASE STYLES            */
+/* ========================================== */
+.dashboard-root {
+    --bg-main: #f1f5f9;
+    --surface: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #4f46e5;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    padding: 32px;
+    background: var(--bg-main);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========================================== */
+/* 2. BENTO BOX & KPI STRIP                   */
+/* ========================================== */
+.kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.kpi-card {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--shadow-hover);
+    border-color: #cbd5e1;
+}
+
+.kpi-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.icon-blue {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.icon-purple {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+.icon-green {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.kpi-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-data .label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.kpi-data .value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-top: 4px;
+}
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+.bento-box {
+    background: var(--surface);
+    padding: 28px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bento-box h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.badge {
+    background: #e0e7ff;
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ========================================== */
+/* 3. MODERN INPUTS & BUTTONS                 */
+/* ========================================== */
+.filter-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modern-input {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-main);
+    font-size: 13px;
+    outline: none;
+}
+
+.modern-select {
+    padding: 6px 32px 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modern-button-primary {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modern-button-primary:hover {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+}
+
+/* ========================================== */
+/* 4. REPORTS SPECIFIC TABLE STYLES           */
+/* ========================================== */
+.table-container {
+    overflow-x: auto;
+}
+
+.bento-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.bento-table th {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 0 16px 8px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.bento-table th.center,
+.bento-table td.center {
+    text-align: center;
+}
+
+.bento-table tbody tr {
+    background: #fafafa;
+    transition: all 0.2s ease;
+}
+
+.bento-table tbody tr:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateX(4px);
+}
+
+.bento-table td {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.bento-table td:first-child {
+    border-left: 1px solid var(--border);
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.bento-table td:last-child {
+    border-right: 1px solid var(--border);
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tiny-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.status-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.pill-blue {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.pill-green {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.danger-bg {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.value-highlight {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.time-compare {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.time-est {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.time-log {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.efficiency-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 150px;
+}
+
+.eff-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eff-text {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.eff-bar-bg {
+    width: 100%;
+    height: 6px;
+    background-color: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.eff-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-warning {
+    color: var(--warning);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.bg-success {
+    background-color: var(--success);
+}
+
+.bg-warning {
+    background-color: var(--warning);
+}
+
+.bg-danger {
+    background-color: var(--danger);
+}
+
+/* Actions Button */
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted, #64748b);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #f1f5f9;
+    color: var(--primary, #4f46e5);
+    border-color: #e2e8f0;
+}
+
+.custom-filter-select {
+    border-radius: 8px;
+    height: 38px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.custom-filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+.custom-filter-select:hover {
+    background-color: #f8fafc;
+}
+
+/* --- CALENDAR LAYOUT FIXES --- */
+
+/* Force the calendar to take full width of the bento box */
+::ng-deep .fc {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Force the grid to show multiple months per row (4 columns) */
+::ng-deep .fc-multimonth {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    /* 4 Months per row */
+    gap: 20px !important;
+    padding: 10px !important;
+}
+
+/* 2. Hide Day Headers (Sun, Mon, Tue...) */
+::ng-deep .fc-multimonth-daygrid-col-header,
+::ng-deep .fc-daygrid-header {
+    display: none !important;
+}
+
+/* 3. Hide the Day Grid Lines and Numbers */
+::ng-deep .fc-daygrid-day-number {
+    display: none !important;
+}
+
+::ng-deep .fc-daygrid-day {
+    border: none !important;
+    /* Remove individual day boxes */
+}
+
+/* 4. Style each Month Card */
+::ng-deep .fc-multimonth-month {
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+    padding-bottom: 10px;
+}
+
+/* 5. Style the Month Names */
+::ng-deep .fc-multimonth-title {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--primary) !important;
+    padding: 15px 0 !important;
+    text-transform: uppercase;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 6. Center the Event Marker (the target icon) */
+::ng-deep .fc-daygrid-day-events {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+}
+
+/* Container for the comparison */
+.time-compare {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.time-est {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.time-log {
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+/* The Fix for the "Odd" 0h look */
+.pending-badge {
+    background: #f1f5f9;
+    /* Light gray */
+    color: #64748b;
+    /* Slate text */
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px dashed #cbd5e1;
+}
+
+.pending-badge i {
+    font-size: 10px;
+    color: var(--primary);
+}
+
+/* Efficiency Bar logic for 0% */
+.eff-bar-bg {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.eff-bar-fill.bg-danger {
+    background: #ef4444 !important;
+    /* Red for 0% or low efficiency */
+}

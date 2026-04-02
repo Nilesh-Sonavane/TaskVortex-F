@@ -149,11 +149,23 @@
                                 <div class="p-3">
                                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                         <div>
-                                            <div class="fw-bold text-dark small">
-                                                {{ log.performedBy ? (log.performedBy.firstName + ' ' +
-                                                log.performedBy.lastName | titlecase) : 'System' | titlecase }}
+                                            <div
+                                                class="fw-bold text-dark small d-flex align-items-center flex-wrap gap-2">
+                                                <span>
+                                                    {{ log.performedBy ? (log.performedBy.firstName + ' ' +
+                                                    log.performedBy.lastName | titlecase) : 'System' | titlecase }}
+                                                </span>
+
+                                                @if (!task().parentTaskId && (log.entityId !== task().id)) {
+                                                <span
+                                                    class="badge bg-light text-secondary border border-secondary-subtle"
+                                                    style="font-size: 0.65rem; padding: 0.25em 0.5em;">
+                                                    Subtask Activity
+                                                </span>
+                                                }
                                             </div>
-                                            <div class="text-muted extra-small">
+
+                                            <div class="text-muted extra-small mt-1">
                                                 {{ log.timestamp | date:'MMM d, y • h:mm a' }}
                                             </div>
                                         </div>
@@ -272,6 +284,33 @@
                         </span>
                     </div>
                     }
+
+                    <div class="my-4" style="border: 1px solid rounded-end;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold small text-muted mb-0">Time Tracking</label>
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;"
+                                (click)="openLogTimeModal()">
+                                <i class="fa-solid fa-plus me-1"></i> Log Time
+                            </button>
+                        </div>
+
+                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                            <div class="progress-bar" role="progressbar" [style.width.%]="timeProgressPercent()"
+                                [ngClass]="isOverBudget() ? 'bg-danger' : 'bg-success'">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-1" style="font-size: 0.75rem;">
+                            <span class="text-muted"><strong>{{ loggedHours() }}h</strong> logged</span>
+                            <span class="text-muted"><strong>{{ estimatedHours() }}h</strong> estimated</span>
+                        </div>
+
+                        @if (isOverBudget()) {
+                        <div class="text-danger extra-small mt-1 fw-bold animate-in">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Over estimated budget!
+                        </div>
+                        }
+                    </div>
                 </div>
 
                 <div class="card border-0 shadow-sm p-4">
@@ -342,6 +381,62 @@
             <button class="btn btn-outline-secondary btn-sm px-4" (click)="closePreview()">Close</button>
             <a [href]="previewUrl()" target="_blank" [download]="selectedFileName().split('_').pop()"
                 class="btn btn-primary btn-sm px-4">Download</a>
+        </div>
+    </div>
+</div>
+}
+
+
+@if (isLogTimeModalOpen()) {
+<div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.5);"></div>
+<div class="modal fade show d-block" tabindex="-1" role="dialog" style="z-index: 1055;">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-light border-bottom-0 rounded-top" style="border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fa-solid fa-stopwatch text-primary me-2"></i>Log Work Time
+                </h5>
+                <button type="button" class="btn-close" aria-label="Close" (click)="closeLogTimeModal()"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">Date Worked</label>
+                        <input type="date" class="form-control" [(ngModel)]="logTimeData.date">
+                    </div>
+
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Hours</label>
+                        <input type="number" class="form-control" min="0" placeholder="0"
+                            [(ngModel)]="logTimeData.hours">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-muted">Minutes</label>
+                        <select class="form-select" [(ngModel)]="logTimeData.minutes">
+                            <option [value]="0">0m</option>
+                            <option [value]="15">15m</option>
+                            <option [value]="30">30m</option>
+                            <option [value]="45">45m</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label small fw-bold text-muted">Work Description</label>
+                        <textarea class="form-control" rows="3" placeholder="What did you work on?"
+                            [(ngModel)]="logTimeData.description"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-top-0 bg-light rounded-bottom" style="border-radius: 0 0 12px 12px;">
+                <button type="button" class="btn btn-light border text-muted"
+                    (click)="closeLogTimeModal()">Cancel</button>
+                <button type="button" class="btn btn-primary px-4 fw-bold"
+                    [disabled]="logTimeData.hours === 0 && logTimeData.minutes === 0" (click)="saveTimeLog()">
+                    Save Time Log
+                </button>
+            </div>
         </div>
     </div>
 </div>

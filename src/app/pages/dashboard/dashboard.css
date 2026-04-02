@@ -509,8 +509,16 @@
     }
 
     .bento-box {
-        padding: 20px;
+        margin-left: 10px;
+        margin-right: 10px;
+        /* padding: 20px; */
     }
+
+    .task-list {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
 
     .banner-text h1 {
         font-size: 24px;

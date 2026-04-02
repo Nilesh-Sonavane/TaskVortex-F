@@ -53,9 +53,11 @@ export class DashboardComponent implements OnInit {
     }
     else if (this.auth.isManager()) {
       this.taskService.getTasksByManager(user.id).subscribe(data => this.tasks.set(data));
+
     }
     else {
       this.taskService.getTasksByAssignee(user.id).subscribe(data => this.tasks.set(data));
+
     }
 
     // 2. Fetch Active Projects Based on Role
@@ -105,14 +107,25 @@ export class DashboardComponent implements OnInit {
 
   employeeStats = computed(() => {
     const myId = this.auth.currentUser?.id;
+
+    // Strictly filter down to ONLY tasks assigned to the logged-in user
     const myTasks = this.tasks().filter(x => x.assigneeId === myId && x.status !== 'CANCELLED');
+
     return {
-      todo: myTasks.filter(x => x.status === 'NOT_STARTED').length,
-      inProgress: myTasks.filter(x => ['DEVELOPMENT_IN_PROGRESS', 'TESTING_IN_PROGRESS', 'IN_UAT'].includes(x.status)).length,
-      completed: myTasks.filter(x => x.status === 'DEPLOYMENT_COMPLETE').length
+      // 1. TOTAL OWN TASKS (Everything assigned to you)
+      total: myTasks.length,
+
+      // 2. IN PROGRESS TASKS
+      inProgress: myTasks.filter(x =>
+        ['DEVELOPMENT_IN_PROGRESS', 'TESTING_IN_PROGRESS', 'IN_UAT', 'RE_DEVELOPMENT_IN_PROGRESS', 'RE_TESTING_IN_PROGRESS'].includes(x.status)
+      ).length,
+
+      // 3. COMPLETED TASKS
+      completed: myTasks.filter(x =>
+        ['DONE', 'DEPLOYMENT_COMPLETE', 'TESTING_COMPLETE', 'DEVELOPMENT_COMPLETE'].includes(x.status)
+      ).length
     };
   });
-
   myFocus = computed(() => {
     const myId = this.auth.currentUser?.id;
     const myTasks = this.tasks().filter(x => x.assigneeId === myId && x.status !== 'DEPLOYMENT_COMPLETE' && x.status !== 'CANCELLED');

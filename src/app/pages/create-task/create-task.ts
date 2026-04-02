@@ -44,12 +44,19 @@ export class CreateTaskComponent implements OnInit {
   taskId: string | null = null;
   assigneeSearchTerm: string = '';
   isSubtask = false;
+  previousAssigneeId: number | null = null;
+  previousAssigneeSearchTerm: string = '';
+  hasClaimed: boolean = false;
+
 
   taskForm: FormGroup;
   managedProjects: any[] = [];
   filteredEmployees: any[] = [];
   selectedFiles: File[] = [];
   existingAttachments: any[] = [];
+
+
+
 
   historyList = signal<any[]>([]);
   historyCount = computed(() => {
@@ -91,49 +98,127 @@ export class CreateTaskComponent implements OnInit {
   setupProjectListener() {
     this.taskForm.get('projectId')?.valueChanges.subscribe((selectedProjectId) => {
       const selectedProject = this.managedProjects.find(p => p.id == selectedProjectId);
+      const assigneeControl = this.taskForm.get('assigneeId');
 
       if (selectedProject?.members) {
         this.filteredEmployees = [...selectedProject.members];
 
-        // Open System Logic: Employees cannot change assignees to OTHERS, so we disable.
-        // Managers/Admins can search and change anyone.
-        if (this.currentUser?.role === 'EMPLOYEE') {
-          this.taskForm.get('assigneeId')?.disable();
+        const currentUserId = this.currentUser?.id;
+        const isAdmin = this.currentUser?.role === 'ADMIN' || this.currentUser?.role === 'SUPER_ADMIN';
+
+        // Safely check if they are the manager of THIS project
+        const isProjectManager = selectedProject.managerId === currentUserId ||
+          (selectedProject.manager && selectedProject.manager.id === currentUserId);
+
+        // Check if they are a member of THIS project
+        const isProjectMember = this.filteredEmployees.some(emp => emp.id === currentUserId);
+
+        if (isAdmin || isProjectManager) {
+          // 1. THEY ARE THE BOSS: Enable the dropdown so they can pick anyone.
+          assigneeControl?.enable();
+
+          // (Optional) Auto-select them if it's a new task, just to save time
+          if (!this.isEditMode && isProjectMember && !assigneeControl?.value) {
+            assigneeControl?.setValue(currentUserId);
+            this.assigneeSearchTerm = this.currentUser.name || `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+          }
+
         } else {
-          this.taskForm.get('assigneeId')?.enable();
+          // 2. STRICT EMPLOYEE LOCK: They are just a worker on this project.
+          // Auto-select them as the assignee immediately.
+          if (isProjectMember) {
+            assigneeControl?.setValue(currentUserId);
+            this.assigneeSearchTerm = this.currentUser.name || `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+          } else {
+            assigneeControl?.setValue(null);
+            this.assigneeSearchTerm = '';
+          }
+
+          // Lock the field! They cannot change it to anyone else.
+          assigneeControl?.disable();
         }
+
       } else {
+        // Fallback if project data is missing
         this.filteredEmployees = [];
+        assigneeControl?.setValue(null);
+        this.assigneeSearchTerm = '';
+        assigneeControl?.disable();
       }
+
       this.cdr.detectChanges();
     });
   }
 
+  clearAssignee() {
+    // Prevent clearing if the field is locked (Employee)
+    if (this.taskForm.get('assigneeId')?.disabled) return;
+
+    this.taskForm.get('assigneeId')?.setValue(null);
+    this.assigneeSearchTerm = '';
+
+    // Briefly open the dropdown so they can pick someone else
+    setTimeout(() => { this.isDropdownOpen = true; }, 100);
+  }
+
+  // 1. The missing method that checks if the button should appear
+  canClaimTask(): boolean {
+    if (!this.currentUser) return false;
+
+    // Check if the logged-in user is actually a member of the currently selected project
+    const isProjectMember = this.filteredEmployees.some(emp => emp.id === this.currentUser?.id);
+
+    // Check who is currently assigned to the task
+    const currentAssigneeId = this.taskForm.get('assigneeId')?.value;
+
+    // Show the button ONLY IF they belong to the project AND they aren't already assigned
+    return isProjectMember && currentAssigneeId !== this.currentUser?.id;
+  }
+
+  // 2. The method to claim the task
   assignToMe() {
     if (!this.currentUser) return;
     const control = this.taskForm.get('assigneeId');
+    const wasDisabled = control?.disabled;
 
-    // Temporarily enable to update value and status
-    control?.enable();
+    // MEMORY: Save the old user state BEFORE replacing it
+    this.previousAssigneeId = control?.value;
+    this.previousAssigneeSearchTerm = this.assigneeSearchTerm;
+    this.hasClaimed = true;
+
+    // Temporarily enable to update
+    if (wasDisabled) control?.enable();
+
+    // Assign to logged-in user
     control?.setValue(this.currentUser.id);
-    control?.updateValueAndValidity();
     control?.markAsDirty();
+    this.assigneeSearchTerm = this.currentUser.name || `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+    this.isDropdownOpen = false;
 
-    // Re-disable for Employees to keep the UI locked
-    if (this.currentUser.role === 'EMPLOYEE') {
-      control?.disable();
-    }
-
-    this.assigneeSearchTerm = this.currentUser.name ||
-      `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+    // Relock if they are an employee
+    if (wasDisabled) control?.disable();
 
     this.toast.show('Task assigned to you', 'success');
     this.cdr.detectChanges();
   }
 
-  canClaimTask(): boolean {
-    const currentAssigneeId = this.taskForm.get('assigneeId')?.value;
-    return this.currentUser?.role === 'EMPLOYEE' && currentAssigneeId !== this.currentUser?.id;
+  // 3. The method to undo the claim
+  cancelClaim() {
+    const control = this.taskForm.get('assigneeId');
+    const wasDisabled = control?.disabled;
+
+    if (wasDisabled) control?.enable();
+
+    // RESTORE: Put the old user back exactly as they were!
+    control?.setValue(this.previousAssigneeId);
+    control?.markAsDirty();
+    this.assigneeSearchTerm = this.previousAssigneeSearchTerm;
+    this.hasClaimed = false;
+
+    if (wasDisabled) control?.disable();
+
+    this.toast.show('Restored original assignee', 'success');
+    this.cdr.detectChanges();
   }
 
   onSubmit() {
