@@ -13,15 +13,6 @@
 
                     <h5 class="form-section-title"><i class="fa-solid fa-user-shield"></i> Access Level</h5>
                     <div class="role-grid">
-                        <!-- <label>
-                            <input type="radio" name="role" class="role-radio" value="admin"
-                                [(ngModel)]="userData.role">
-                            <div class="role-card">
-                                <i class="fa-solid fa-circle-check check-circle"></i>
-                                <div class="role-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                                <div class="role-name">Admin</div>
-                            </div>
-                        </label> -->
                         <label>
                             <input type="radio" name="role" class="role-radio" value="manager"
                                 [(ngModel)]="userData.role">
@@ -45,51 +36,123 @@
                     <hr class="border-secondary opacity-10 my-4">
 
                     <h5 class="form-section-title"><i class="fa-regular fa-id-card"></i> Personal Details</h5>
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label">First Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="firstName" [(ngModel)]="userData.firstName"
-                                required #fName="ngModel">
+                                required minlength="2" maxlength="50" #fName="ngModel" (input)="clearError('firstName')"
+                                [ngClass]="{'is-invalid': (fName.invalid && (fName.dirty || fName.touched)) || backendErrors['firstName']}">
+
+                            @if (fName.invalid && (fName.dirty || fName.touched)) {
+                            <div class="invalid-feedback d-block">
+                                @if (fName.errors?.['required']) { <span>First name is required.</span> }
+                                @if (fName.errors?.['minlength']) { <span>Minimum 2 characters required.</span> }
+                            </div>
+                            }
+                            @if (backendErrors['firstName']) {
+                            <div class="invalid-feedback d-block">{{ backendErrors['firstName'] }}</div>
+                            }
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">Last Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="lastName" [(ngModel)]="userData.lastName"
-                                required #lName="ngModel">
+                                required minlength="2" maxlength="50" #lName="ngModel" (input)="clearError('lastName')"
+                                [ngClass]="{'is-invalid': (lName.invalid && (lName.dirty || lName.touched)) || backendErrors['lastName']}">
+
+                            @if (lName.invalid && (lName.dirty || lName.touched)) {
+                            <div class="invalid-feedback d-block">
+                                @if (lName.errors?.['required']) { <span>Last name is required.</span> }
+                                @if (lName.errors?.['minlength']) { <span>Minimum 2 characters required.</span> }
+                            </div>
+                            }
+                            @if (backendErrors['lastName']) {
+                            <div class="invalid-feedback d-block">{{ backendErrors['lastName'] }}</div>
+                            }
                         </div>
+
                         <div class="col-md-12">
                             <label class="form-label">Email Address <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" name="email" [(ngModel)]="userData.email" required
-                                #emailRef="ngModel" [readonly]="isEditMode">
-                            @if(isEditMode) { <small class="text-muted fst-italic">Email cannot be changed after
+                                email #emailRef="ngModel" [readonly]="isEditMode" (input)="clearError('email')"
+                                [ngClass]="{'is-invalid': (emailRef.invalid && (emailRef.dirty || emailRef.touched)) || backendErrors['email']}">
+
+                            @if (emailRef.invalid && (emailRef.dirty || emailRef.touched)) {
+                            <div class="invalid-feedback d-block">
+                                @if (emailRef.errors?.['required']) { <span>Email is required.</span> }
+                                @if (emailRef.errors?.['email']) { <span>Please enter a valid email address.</span> }
+                            </div>
+                            }
+                            @if (backendErrors['email']) {
+                            <div class="invalid-feedback d-block">{{ backendErrors['email'] }}</div>
+                            }
+                            @if (isEditMode) { <small class="text-muted fst-italic">Email cannot be changed after
                                 registration.</small> }
                         </div>
+
                         <div class="col-md-6">
-                            <label class="form-label">Department</label>
-                            <select class="form-select" name="department" [(ngModel)]="userData.department">
+                            <label class="form-label">Department <span class="text-danger">*</span></label>
+                            <select class="form-select" name="department" [(ngModel)]="userData.department" required
+                                #deptRef="ngModel" (change)="clearError('department')"
+                                [ngClass]="{'is-invalid': (deptRef.invalid && (deptRef.dirty || deptRef.touched)) || backendErrors['department']}">
                                 <option [ngValue]="null">Select Department...</option>
                                 @for (dept of departments; track dept.id) {
+                                @if (dept.id!=1) {
                                 <option [ngValue]="dept">{{ dept.name }}</option>
                                 }
+                                }
                             </select>
+                            @if (deptRef.invalid && (deptRef.dirty || deptRef.touched)) {
+                            <div class="invalid-feedback d-block">Department selection is required.</div>
+                            }
+                            @if (backendErrors['department']) {
+                            <div class="invalid-feedback d-block">{{ backendErrors['department'] }}</div>
+                            }
                         </div>
+
                         <div class="col-md-6">
-                            <label class="form-label">Job Title</label>
-                            <input type="text" class="form-control" name="jobTitle" [(ngModel)]="userData.jobTitle">
+                            <label class="form-label">Job Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="jobTitle" [(ngModel)]="userData.jobTitle"
+                                required #jobRef="ngModel" (input)="clearError('jobTitle')"
+                                [ngClass]="{'is-invalid': (jobRef.invalid && (jobRef.dirty || jobRef.touched)) || backendErrors['jobTitle']}">
+
+                            @if (jobRef.invalid && (jobRef.dirty || jobRef.touched)) {
+                            <div class="invalid-feedback d-block">Job Title is required.</div>
+                            }
+                            @if (backendErrors['jobTitle']) {
+                            <div class="invalid-feedback d-block">{{ backendErrors['jobTitle'] }}</div>
+                            }
                         </div>
                     </div>
 
                     @if (!isEditMode) {
                     <h5 class="form-section-title"><i class="fa-solid fa-lock"></i> Security</h5>
-
                     <div class="row g-3 mb-4">
                         <div class="col-12">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <div class="input-group">
+                            <div class="input-group has-validation">
                                 <input type="password" class="form-control" name="password"
-                                    [(ngModel)]="userData.password" required>
-                                <button type="button" class="btn-gen-pass" (click)="generatePassword()">
+                                    [(ngModel)]="userData.password" required
+                                    pattern="^(?!.*\s)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$"
+                                    #passRef="ngModel" (input)="clearError('password')"
+                                    [ngClass]="{'is-invalid': (passRef.invalid && (passRef.dirty || passRef.touched)) || backendErrors['password']}">
+
+                                <button type="button" class="btn btn-outline-secondary" (click)="generatePassword()">
                                     <i class="fa-solid fa-shuffle me-2"></i> Generate
                                 </button>
+
+                                @if (passRef.invalid && (passRef.dirty || passRef.touched)) {
+                                <div class="invalid-feedback d-block" style="width: 100%;">
+                                    @if (passRef.errors?.['required']) { <span>Password is required.</span> }
+                                    @if (passRef.errors?.['pattern']) { <span>Password must be 8+ chars with a number,
+                                        uppercase, lowercase, and special character.</span> }
+                                </div>
+                                }
+                                @if (backendErrors['password']) {
+                                <div class="invalid-feedback d-block" style="width: 100%;">{{ backendErrors['password']
+                                    }}</div>
+                                }
                             </div>
                         </div>
                     </div>

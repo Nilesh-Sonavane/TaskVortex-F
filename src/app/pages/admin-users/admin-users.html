@@ -26,7 +26,9 @@
                     <option>All Departments</option>
 
                     @for (dept of departments(); track dept.id) {
+                    @if (dept.id!=1) {
                     <option [value]="dept.name">{{ dept.name }}</option>
+                    }
                     }
 
                 </select>

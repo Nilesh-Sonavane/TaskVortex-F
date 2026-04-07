@@ -38,6 +38,9 @@ export class AddUserComponent implements OnInit {
     password: '' // Optional in edit mode
   };
 
+  // NAYA: Backend se aane wale errors ko store karne ke liye
+  backendErrors: any = {};
+
   ngOnInit() {
     this.loadDepartments();
 
@@ -88,11 +91,19 @@ export class AddUserComponent implements OnInit {
   generatePassword() {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     this.userData.password = Array(12).fill(0).map(() => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+    this.clearError('password'); // NAYA: Password generate hone par error hata do
   }
 
-  // Inside AddUserComponent
+  // NAYA: User jab type karna shuru kare toh error hata do
+  clearError(field: string) {
+    if (this.backendErrors[field]) {
+      delete this.backendErrors[field];
+    }
+  }
+
   onSubmit() {
     this.isLoading = true;
+    this.backendErrors = {}; // Har nayi submit pe purane errors clear kar do
 
     const payload = {
       firstName: this.userData.firstName,
@@ -117,11 +128,23 @@ export class AddUserComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        console.error('Update Error:', err); // Check console for specific 404 or 405 error
-        this.toast.show('Failed to update user.', 'error');
+        if (err.status === 400 && err.error) {
+          if (typeof err.error === 'object' && !err.error.message && !err.error.error) {
+            this.backendErrors = err.error;
+            this.toast.show('Please fix the errors highlighted in the form.', 'error');
+          }
+          else if (err.error.error) {
+            this.toast.show(err.error.error, 'error');
+            if (err.error.error.toLowerCase().includes('email')) {
+              this.backendErrors['email'] = err.error.error;
+            }
+          }
+        } else {
+          this.toast.show('Failed to save user.', 'error');
+        }
+
         this.cdr.detectChanges();
       }
     });
   }
-
 }

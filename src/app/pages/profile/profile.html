@@ -15,7 +15,13 @@
                 <div class="identity-text">
                     <div class="role-tag">{{ user().role }}</div>
                     <h1>{{ user().firstName }} {{ user().lastName |titlecase}}</h1>
-                    <p><i class="fa-solid fa-location-dot"></i> {{ user().location |titlecase}}</p>
+                    <p class="d-flex align-items-center gap-3">
+                        <span>
+                            <i class="fa-solid fa-location-dot me-1 text-primary"></i>
+                            {{ user().location | titlecase }}
+                        </span>
+                    </p>
+
                 </div>
                 <div class="identity-actions ms-auto">
                     <button class="btn-glass" [class.active]="isEditing()" (click)="toggleEdit()">
@@ -30,26 +36,69 @@
             <main class="info-section">
                 <div class="premium-card">
                     <div class="card-title">General Information</div>
-                    <div class="grid-form">
+
+                    <form #profileForm="ngForm" class="grid-form">
+
                         <div class="input-wrap">
-                            <label>First Name</label>
-                            <input type="text" [(ngModel)]="editData.firstName" [disabled]="!isEditing()">
+                            <label>First Name <span class="text-danger" *ngIf="isEditing()">*</span></label>
+                            <input type="text" name="firstName" [(ngModel)]="editData.firstName"
+                                [disabled]="!isEditing()" required minlength="2" maxlength="50" #fName="ngModel"
+                                (input)="clearError('firstName')"
+                                [ngClass]="{'is-invalid border-danger text-danger': isEditing() && ((fName.invalid && (fName.dirty || fName.touched)) || backendErrors['firstName'])}">
+
+                            @if (isEditing() && fName.invalid && (fName.dirty || fName.touched)) {
+                            <div class="text-danger small mt-1 fw-medium">
+                                @if (fName.errors?.['required']) { <span>First name is required.</span> }
+                                @if (fName.errors?.['minlength']) { <span>Minimum 2 characters required.</span> }
+                            </div>
+                            }
+                            @if (isEditing() && backendErrors['firstName']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ backendErrors['firstName'] }}</div>
+                            }
                         </div>
+
                         <div class="input-wrap">
-                            <label>Last Name</label>
-                            <input type="text" [(ngModel)]="editData.lastName" [disabled]="!isEditing()">
+                            <label>Last Name <span class="text-danger" *ngIf="isEditing()">*</span></label>
+                            <input type="text" name="lastName" [(ngModel)]="editData.lastName" [disabled]="!isEditing()"
+                                required minlength="2" maxlength="50" #lName="ngModel" (input)="clearError('lastName')"
+                                [ngClass]="{'is-invalid border-danger text-danger': isEditing() && ((lName.invalid && (lName.dirty || lName.touched)) || backendErrors['lastName'])}">
+
+                            @if (isEditing() && lName.invalid && (lName.dirty || lName.touched)) {
+                            <div class="text-danger small mt-1 fw-medium">
+                                @if (lName.errors?.['required']) { <span>Last name is required.</span> }
+                                @if (lName.errors?.['minlength']) { <span>Minimum 2 characters required.</span> }
+                            </div>
+                            }
+                            @if (isEditing() && backendErrors['lastName']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ backendErrors['lastName'] }}</div>
+                            }
                         </div>
 
                         <div class="input-wrap">
                             <label>Location</label>
-                            <input type="text" style="text-transform: capitalize;" [(ngModel)]="editData.location"
-                                [disabled]="!isEditing()" placeholder="City, Country">
+                            <input type="text" style="text-transform: capitalize;" name="location"
+                                [(ngModel)]="editData.location" [disabled]="!isEditing()" placeholder="City, Country"
+                                maxlength="100" #loc="ngModel" (input)="clearError('location')"
+                                [ngClass]="{'border-danger': isEditing() && backendErrors['location']}">
+
+                            @if (isEditing() && backendErrors['location']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ backendErrors['location'] }}</div>
+                            }
                         </div>
 
                         <div class="input-wrap">
                             <label>Phone Number</label>
-                            <input type="text" [(ngModel)]="editData.phone" [disabled]="!isEditing()"
-                                placeholder="+00 0000 0000">
+                            <input type="text" name="phone" [(ngModel)]="editData.phone" [disabled]="!isEditing()"
+                                placeholder="9876543210" pattern="^[0-9]{10}$" #phoneRef="ngModel"
+                                (input)="clearError('phone')"
+                                [ngClass]="{'border-danger text-danger': isEditing() && ((phoneRef.invalid && (phoneRef.dirty || phoneRef.touched)) || backendErrors['phone'])}">
+
+                            @if (isEditing() && phoneRef.invalid && (phoneRef.dirty || phoneRef.touched)) {
+                            <div class="text-danger small mt-1 fw-medium">Phone number must be exactly 10 digits.</div>
+                            }
+                            @if (isEditing() && backendErrors['phone']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ backendErrors['phone'] }}</div>
+                            }
                         </div>
 
                         <div class="input-wrap full">
@@ -59,12 +108,23 @@
 
                         <div class="input-wrap full">
                             <label>About Me</label>
-                            <textarea rows="4" [(ngModel)]="editData.bio" [disabled]="!isEditing()"></textarea>
+                            <textarea rows="4" name="bio" [(ngModel)]="editData.bio" [disabled]="!isEditing()"
+                                maxlength="500" #bioRef="ngModel" (input)="clearError('bio')"
+                                [ngClass]="{'border-danger': isEditing() && backendErrors['bio']}"></textarea>
+
+                            @if (isEditing()) {
+                            <small class="text-muted d-block text-end">{{ editData.bio.length || 0 }}/500</small>
+                            }
+
+                            @if (isEditing() && backendErrors['bio']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ backendErrors['bio'] }}</div>
+                            }
                         </div>
-                    </div>
+                    </form>
 
                     @if (isEditing()) {
-                    <button class="btn-save" (click)="saveProfile()" [disabled]="isLoading()">
+                    <button class="btn-save mt-3" (click)="saveProfile()"
+                        [disabled]="isLoading() || profileForm.invalid">
                         {{ isLoading() ? 'Syncing...' : 'Save Profile Changes' }}
                     </button>
                     }
@@ -75,22 +135,49 @@
                 <div class="premium-card security-theme">
                     <div class="card-title">Privacy & Security</div>
 
-                    <div class="input-wrap mb-3">
-                        <label>Current Password</label>
-                        <input type="password" [(ngModel)]="passwordData.current" placeholder="••••••••">
-                    </div>
+                    <form #passForm="ngForm">
+                        <div class="input-wrap mb-3">
+                            <label>Current Password</label>
+                            <input type="password" name="current" [(ngModel)]="passwordData.current" required
+                                placeholder="••••••••" (input)="clearPasswordError('current')"
+                                [ngClass]="{'border-danger': passwordBackendErrors['current']}">
+                            @if (passwordBackendErrors['current']) {
+                            <div class="text-danger small mt-1 fw-medium">{{ passwordBackendErrors['current'] }}</div>
+                            }
+                        </div>
 
-                    <div class="input-wrap mb-3">
-                        <label>New Password</label>
-                        <input type="password" [(ngModel)]="passwordData.new" placeholder="••••••••">
-                    </div>
+                        <div class="input-wrap mb-3">
+                            <label>New Password</label>
+                            <input type="password" name="new" [(ngModel)]="passwordData.new" required
+                                placeholder="••••••••"
+                                pattern="^(?!.*\s)(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$"
+                                #newPass="ngModel">
 
-                    <div class="input-wrap">
-                        <label>Confirm New</label>
-                        <input type="password" [(ngModel)]="passwordData.confirm" placeholder="••••••••">
-                    </div>
+                            @if (newPass.invalid && (newPass.dirty || newPass.touched)) {
+                            <div class="text-danger small mt-1 fw-medium">
+                                @if (newPass.errors?.['required']) { <span>Required.</span> }
+                                @if (newPass.errors?.['pattern']) { <span>Must be 8+ chars (A-Z, a-z, 0-9, !@#$).</span>
+                                }
+                            </div>
+                            }
+                        </div>
 
-                    <button class="btn-security" (click)="changePassword()">Update Password</button>
+                        <div class="input-wrap mb-3">
+                            <label>Confirm New</label>
+                            <input type="password" name="confirm" [(ngModel)]="passwordData.confirm" required
+                                placeholder="••••••••" #confirmPass="ngModel">
+
+                            @if (passwordData.new && passwordData.confirm && passwordData.new !== passwordData.confirm)
+                            {
+                            <div class="text-danger small mt-1 fw-medium">Passwords do not match.</div>
+                            }
+                        </div>
+
+                        <button class="btn-security mt-2" (click)="changePassword()"
+                            [disabled]="passForm.invalid || (passwordData.new !== passwordData.confirm)">
+                            Update Password
+                        </button>
+                    </form>
                 </div>
 
                 <div class="metadata-card">

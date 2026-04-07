@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog';
 import { Loader } from '../../components/loader/loader';
+import { PromptDialogComponent } from '../../components/prompt-dialog/prompt-dialog';
 import { TaskService } from '../../services/task-service';
 import { TimeLogService } from '../../services/time-log-service';
 import { ToastService } from '../../services/toast';
@@ -14,7 +15,7 @@ import { ToastService } from '../../services/toast';
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, Loader, FormsModule, ConfirmDialogComponent],
+  imports: [CommonModule, RouterModule, Loader, FormsModule, ConfirmDialogComponent, PromptDialogComponent],
   templateUrl: './task-detail.html',
   styleUrls: ['./task-detail.css']
 })
@@ -28,8 +29,13 @@ export class TaskDetail implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private routeSub: Subscription | null = null;
   performerSearch = signal<string>('');
+  // --- TIMER FEATURE SIGNALS ---
+  activeTimer = signal<any>(null);
+  runningTime = signal<string>('00:00:00');
+  private liveTimerInterval: any;
 
   confirmDialog = viewChild<ConfirmDialogComponent>('confirmDialog');
+  promptDialog = viewChild<PromptDialogComponent>('promptDialog');
 
   // --- CURRENT USER STATE ---
   currentUser = JSON.parse(localStorage.getItem('user_details') || '{}');
@@ -205,26 +211,38 @@ export class TaskDetail implements OnInit, OnDestroy {
         this.task.set(data);
         this.loadTaskHistory(id);
 
-        // Start the timer
+        // Start the task deadline timer
         this.calculateTimeLeft();
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.timerInterval = setInterval(() => this.calculateTimeLeft(), 60000);
 
-        // --- NEW FIX: Fetch PERSONALIZED Time Tracking Data ---
+        // --- Fetch PERSONALIZED Time Tracking Data ---
         this.estimatedHours.set(data.workingHours || 0);
 
         // Get the logged-in user's ID
         const currentUserId = this.currentUser?.id;
 
         if (currentUserId) {
-          // Call the new personalized method passing both task ID and user ID
+          // 1. Puraana Logic: Fetch total logged hours
           this.timeLogService.getUserTotalHours(id, currentUserId).subscribe({
             next: (res: any) => {
-              // Handle response whether backend returns a direct number or an object
               const personalHours = typeof res === 'number' ? res : (res?.totalLoggedHours || 0);
               this.loggedHours.set(personalHours);
             },
             error: (err) => console.error('Error fetching personalized total hours', err)
+          });
+
+          // 2. NAYA LOGIC: Check if a work timer is already running!
+          this.timeLogService.getActiveTimer(id, currentUserId).subscribe({
+            next: (timer: any) => {
+              if (timer) {
+                // Agar database mein timer chalu hai, toh UI par clock start kar do
+                this.activeTimer.set(timer);
+                this.startUIClock(timer.startTime);
+                this.timeLogService.isGlobalTimerRunning.set(true);
+              }
+            },
+            error: (err) => console.error('Error fetching active timer', err)
           });
         }
 
@@ -238,6 +256,7 @@ export class TaskDetail implements OnInit, OnDestroy {
     });
   }
 
+
   loadTaskHistory(id: number) {
     this.historyList.set([]);
     this.taskService.getTaskHistory(id).subscribe({
@@ -247,6 +266,7 @@ export class TaskDetail implements OnInit, OnDestroy {
       error: (err) => console.error('History fetch error', err)
     });
   }
+
 
   onStatusChange(newStatus: string) {
     if (!this.task() || !this.canEdit()) {
@@ -461,8 +481,78 @@ export class TaskDetail implements OnInit, OnDestroy {
     });
   }
 
+  // --- START / STOP TIMER LOGIC ---
+  startWorkTimer() {
+    const currentUserId = this.currentUser?.id;
+    const taskId = this.task()?.id;
+    if (!currentUserId || !taskId) return;
+
+    this.timeLogService.startTimer(taskId, currentUserId).subscribe({
+      next: (timer) => {
+        this.activeTimer.set(timer);
+        this.startUIClock(timer.startTime);
+        this.timeLogService.isGlobalTimerRunning.set(true);
+        this.toast.show('Timer started successfully!', 'success');
+      },
+      error: (err) => this.toast.show(err.error || 'Failed to start timer', 'error')
+    });
+  }
+
+  stopWorkTimer() {
+    const currentUserId = this.currentUser?.id;
+    const taskId = this.task()?.id;
+    if (!currentUserId || !taskId) return;
+
+    this.promptDialog()?.open(
+      'Please enter what you worked on before stopping the timer:',
+      'Stop & Log Time',
+      'Work completed via Timer', // Default text
+      (descriptionText: string) => {
+        this.timeLogService.stopTimer(taskId, currentUserId, { description: descriptionText }).subscribe({
+          next: (log: any) => {
+            this.stopUIClock();
+            this.activeTimer.set(null);
+            this.timeLogService.isGlobalTimerRunning.set(false);
+            this.loggedHours.update(current => current + log.loggedHours);
+            this.loadTaskHistory(taskId);
+            this.toast.show(`Logged ${log.loggedHours} hours!`, 'success');
+          },
+          error: (err) => this.toast.show(err.error || 'Failed to stop timer', 'error')
+        });
+      }
+    );
+  }
+
+  startUIClock(startTimeIso: string) {
+    this.stopUIClock();
+    const startTime = new Date(startTimeIso).getTime();
+
+    this.liveTimerInterval = setInterval(() => {
+      const now = new Date().getTime();
+      const diff = now - startTime;
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const hh = hours.toString().padStart(2, '0');
+      const mm = minutes.toString().padStart(2, '0');
+      const ss = seconds.toString().padStart(2, '0');
+
+      this.runningTime.set(`${hh}:${mm}:${ss}`);
+    }, 1000);
+  }
+
+  stopUIClock() {
+    if (this.liveTimerInterval) {
+      clearInterval(this.liveTimerInterval);
+      this.runningTime.set('00:00:00');
+    }
+  }
+
   ngOnDestroy() {
     if (this.routeSub) this.routeSub.unsubscribe();
     if (this.timerInterval) clearInterval(this.timerInterval);
+    this.stopUIClock();
   }
 }
